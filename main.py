@@ -1,5 +1,6 @@
 import pygame
 from map import GameMap  # Import the map handling class
+from sprite import Sprite  # Import the sprite class
 from camera import Camera  # Import the camera for scrolling
 
 # Define basic colors for the game
@@ -29,32 +30,37 @@ game_map = GameMap(map_width, map_height, tile_size, GREEN, BROWN)
 # Initialize the camera, which will allow movement around the map
 camera = Camera(screen_size, map_width, map_height, tile_size)
 
+# Initialize the sprite
+player = Sprite("assets/sprites/player/attack_2.png", 100, 100)  # Change to your sprite's path
+
 # Main game loop
 running = True
 while running:
     # Event handling loop
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:  # Check if the user closes the game window
-            running = False  # Exit the game loop
+        if event.type == pygame.QUIT:
+            running = False
 
-    # Handle user input for camera movement using arrow keys
-    keys = pygame.key.get_pressed()  # Get the state of all keyboard keys
-    if keys[pygame.K_LEFT]:  # Move camera left
-        camera.move(-10, 0)
-    if keys[pygame.K_RIGHT]:  # Move camera right
-        camera.move(10, 0)
-    if keys[pygame.K_UP]:  # Move camera up
-        camera.move(0, -10)
-    if keys[pygame.K_DOWN]:  # Move camera down
-        camera.move(0, 10)
+    # Handle user input for sprite movement
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_a]:
+        player.move(-5, 0)
+    if keys[pygame.K_d]:
+        player.move(5, 0)
+    if keys[pygame.K_w]:
+        player.move(0, -5)
+    if keys[pygame.K_s]:
+        player.move(0, 5)
 
-    # Render the game map and update the screen
-    screen.fill(BLACK)  # Clear the screen by filling it with black
-    game_map.draw(screen, camera)  # Draw the map with the camera's view
-    pygame.display.flip()  # Update the display with the new frame
+    # Update camera to follow the sprite
+    camera.follow_sprite(player)
 
-    # Limit the game loop to 60 frames per second
+    # Render the game map and sprite
+    screen.fill(BLACK)
+    game_map.draw(screen, camera)
+    player.draw(screen, camera)
+
+    pygame.display.flip()
     clock.tick(60)
 
-# Quit pygame after exiting the loop
 pygame.quit()

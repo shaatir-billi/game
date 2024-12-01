@@ -28,3 +28,21 @@ class Camera:
             0, min(self.x_offset, self.map_width - self.screen_width))
         self.y_offset = max(
             0, min(self.y_offset, self.map_height - self.screen_height))
+        
+        
+    def follow_sprite(self, sprite):
+        # Calculate the potential offsets to center the sprite
+        target_x_offset = sprite.rect.centerx - self.screen_width // 2
+        target_y_offset = sprite.rect.centery - self.screen_height // 2
+
+        # Clamp the x_offset, ensuring the entire sprite remains visible
+        self.x_offset = max(0, min(target_x_offset, self.map_width - self.screen_width))
+
+        # Ensure the right edge of the sprite doesn’t go off-screen
+        if sprite.rect.right > self.map_width:
+            self.x_offset = self.map_width - self.screen_width
+
+        # Clamp the y_offset similarly
+        self.y_offset = max(0, min(target_y_offset, self.map_height - self.screen_height))
+
+
