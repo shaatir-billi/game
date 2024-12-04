@@ -1,30 +1,20 @@
 class Camera:
-    def __init__(self, screen_size, map_width, map_height, tile_size):
+    def __init__(self, screen_size, map_width):
         """
         Initialize the camera object.
         :param screen_size: The dimensions of the screen (width, height)
-        :param map_width: The number of tiles in the map's width
-        :param map_height: The number of tiles in the map's height
-        :param tile_size: The size of each tile in pixels
+        :param map_width: The total width of the map in pixels
         """
-        self.screen_width, self.screen_height = screen_size  # Screen dimensions in pixels
-        self.map_width = map_width * tile_size  # Total map width in pixels
-        self.map_height = map_height * tile_size  # Total map height in pixels
-        # Initial camera position (top-left corner)
-        self.x_offset, self.y_offset = 0, 0
+        self.screen_width = screen_size[0]
+        self.map_width = map_width
+        self.x_offset = 0  # Initial horizontal offset
 
-    def move(self, dx, dy):
+    def follow_sprite(self, sprite):
         """
-        Move the camera by a specified amount.
-        :param dx: Amount to move in the x-direction
-        :param dy: Amount to move in the y-direction
+        Center the camera horizontally on the sprite, clamped to the map bounds.
+        :param sprite: The sprite to follow
         """
-        # Adjust the camera's position
-        self.x_offset += dx
-        self.y_offset += dy
-
-        # Clamp the camera position to ensure it doesn't go out of bounds
+        target_x_offset = sprite.rect.centerx - self.screen_width // 2
         self.x_offset = max(
-            0, min(self.x_offset, self.map_width - self.screen_width))
-        self.y_offset = max(
-            0, min(self.y_offset, self.map_height - self.screen_height))
+            0, min(target_x_offset, self.map_width - self.screen_width)
+        )
