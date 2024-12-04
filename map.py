@@ -16,13 +16,15 @@ class GameMap:
         )
         self.sky_width = self.sky_image.get_width()
 
-    def draw(self, screen):
+    def draw(self, screen, camera):
         """
         Draw the map's repeating background based on the screen width.
         :param screen: The game window surface to draw on
+        :param camera: The camera for horizontal scrolling
         """
-        tiles = math.ceil(SCREEN_WIDTH / self.sky_width) + 1
+        tiles = math.ceil(map_width / self.sky_width)
 
-        # Draw the background repeatedly to cover the screen width
+        # Draw the background considering camera's offset
         for x in range(0, tiles):
-            screen.blit(self.sky_image, (x * self.sky_width, 0))
+            screen.blit(self.sky_image,
+                        ((x * self.sky_width) - camera.x_offset, 0))

@@ -13,7 +13,6 @@ pygame.display.set_caption("Shaatir Billi")
 # Clock to control frames per second (FPS)
 clock = pygame.time.Clock()
 
-
 # Initialize the game map and camera
 game_map = GameMap(sky_image_path)
 camera = Camera((SCREEN_WIDTH, SCREEN_HEIGHT), map_width)
@@ -41,10 +40,23 @@ while running:
     if keys[pygame.K_s]:  # Move down
         player.move(0, 5)
 
+    # Check if the sprite falls below the screen
+    if player.rect.y > SCREEN_HEIGHT:
+        # Display failure screen
+        screen.fill((255, 0, 0))  # Fill screen with red
+        font = pygame.font.SysFont("Arial", 48)
+        text = font.render("Game Over", True, (255, 255, 255))
+        screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2,
+                           SCREEN_HEIGHT // 2 - text.get_height() // 2))
+        pygame.display.flip()
+        pygame.time.wait(2000)  # Wait for 2 seconds
+        running = False  # End the game loop
+
     # Update the camera to follow the player
     camera.follow_sprite(player)
 
-    game_map.draw(screen)  # Draw the repeating background
+    # Draw the repeating background with camera offset
+    game_map.draw(screen, camera)
     player.draw(screen, camera)  # Draw the player
 
     pygame.display.flip()
