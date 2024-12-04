@@ -1,66 +1,53 @@
 import pygame
-from map import GameMap  # Import the map handling class
-from sprite import Sprite  # Import the sprite class
-from camera import Camera  # Import the camera for scrolling
-
-# Define basic colors for the game
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREEN = (0, 128, 0)  # Grass color
-BROWN = (165, 42, 42)  # Dirt color
+from map import GameMap
+from sprite import Sprite
+from camera import Camera
+from globals import *
 
 # Initialize pygame
 pygame.init()
 
-# Set the screen/window size
-screen_size = (800, 600)  # Width x Height in pixels
-screen = pygame.display.set_mode(screen_size)  # Create the game window
-pygame.display.set_caption("RTS Game")  # Set the window title
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Shaatir Billi")
 
 # Clock to control frames per second (FPS)
 clock = pygame.time.Clock()
 
-# Tile size and map dimensions (number of tiles in width and height)
-tile_size = 50  # Each tile is 50x50 pixels
-map_width, map_height = 20, 15  # 20 tiles wide, 15 tiles high
 
-# Initialize the game map
-game_map = GameMap(map_width, map_height, tile_size, GREEN, BROWN)
+# Initialize the game map and camera
+game_map = GameMap(sky_image_path)
+camera = Camera((SCREEN_WIDTH, SCREEN_HEIGHT), map_width)
 
-# Initialize the camera, which will allow movement around the map
-camera = Camera(screen_size, map_width, map_height, tile_size)
-
-# Initialize the sprite
-player = Sprite("assets/sprites/player/attack_2.png", 100, 100)  # Change to your sprite's path
+# Initialize the player sprite
+player = Sprite("assets/sprites/player/attack_2.png",
+                100, 300)  # Starts at y=300
 
 # Main game loop
 running = True
 while running:
-    # Event handling loop
+    # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Handle user input for sprite movement
+    # Handle input for player movement
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
+    if keys[pygame.K_a]:  # Move left
         player.move(-5, 0)
-    if keys[pygame.K_d]:
+    if keys[pygame.K_d]:  # Move right
         player.move(5, 0)
-    if keys[pygame.K_w]:
+    if keys[pygame.K_w]:  # Move up
         player.move(0, -5)
-    if keys[pygame.K_s]:
+    if keys[pygame.K_s]:  # Move down
         player.move(0, 5)
 
-    # Update camera to follow the sprite
+    # Update the camera to follow the player
     camera.follow_sprite(player)
 
-    # Render the game map and sprite
-    screen.fill(BLACK)
-    game_map.draw(screen, camera)
-    player.draw(screen, camera)
+    game_map.draw(screen)  # Draw the repeating background
+    player.draw(screen, camera)  # Draw the player
 
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(60)  # Limit to 60 FPS
 
 pygame.quit()

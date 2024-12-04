@@ -1,42 +1,28 @@
 import pygame
+import math
+from globals import *
 
 
 class GameMap:
-    def __init__(self, width, height, tile_size, grass_color, dirt_color):
+    def __init__(self, sky_image_path):
         """
         Initialize the game map.
-        :param width: Number of tiles in width
-        :param height: Number of tiles in height
-        :param tile_size: Size of each tile in pixels (square)
-        :param grass_color: Color of the grass tiles
-        :param dirt_color: Color of the dirt tiles
+        :param sky_image_path: Path to the background image
         """
-        self.width = width  # Width of the map in tiles
-        self.height = height  # Height of the map in tiles
-        self.tile_size = tile_size  # Pixel size of each square tile
-        self.grass_color = grass_color  # Color used for grass tiles
-        self.dirt_color = dirt_color  # Color used for dirt tiles
+        # Load and scale the background image
+        self.sky_image = pygame.image.load(sky_image_path).convert()
+        self.sky_image = pygame.transform.scale(
+            self.sky_image, (SCREEN_WIDTH, SCREEN_HEIGHT)
+        )
+        self.sky_width = self.sky_image.get_width()
 
-    def draw(self, screen, camera):
+    def draw(self, screen):
         """
-        Draw the map on the screen.
+        Draw the map's repeating background based on the screen width.
         :param screen: The game window surface to draw on
-        :param camera: The camera object to adjust tile positions
         """
-        # Loop through all tiles in the map
-        for row in range(self.height):
-            for col in range(self.width):
-                # Alternate between grass and dirt tiles
-                color = self.grass_color if (
-                    row + col) % 2 == 0 else self.dirt_color
+        tiles = math.ceil(SCREEN_WIDTH / self.sky_width) + 1
 
-                # Calculate the position of the tile relative to the camera
-                rect = pygame.Rect(
-                    col * self.tile_size - camera.x_offset,  # X position
-                    row * self.tile_size - camera.y_offset,  # Y position
-                    self.tile_size,  # Tile width
-                    self.tile_size,  # Tile height
-                )
-
-                # Draw the tile as a filled rectangle
-                pygame.draw.rect(screen, color, rect)
+        # Draw the background repeatedly to cover the screen width
+        for x in range(0, tiles):
+            screen.blit(self.sky_image, (x * self.sky_width, 0))
