@@ -21,11 +21,16 @@ player = Sprite(
     sprite_sheet_path="assets/sprites/player/sprite_sheet.png",
     x=100,
     y=300,
-    frame_width=32,  # Replace with your frame's width
-    frame_height=32,  # Replace with your frame's height
+    frame_width=32,
+    frame_height=32,
     scale=5
 )
 
+# Variables for jumping
+gravity = 1
+jump_force = -15
+player_velocity_y = 0
+is_jumping = False
 
 # Main game loop
 running = True
@@ -37,22 +42,38 @@ while running:
     # Handle input for player movement
     keys = pygame.key.get_pressed()
     dx = 0
-    dy = 0
+
     if keys[pygame.K_a]:  # Move left
         dx = -5
-        player.set_animation(5)  # Set the animation row for left movement
-    if keys[pygame.K_d]:  # Move right
+        if not is_jumping:
+            player.set_animation(5)  # Left movement animation
+    elif keys[pygame.K_d]:  # Move right
         dx = 5
-        player.set_animation(5)  # Set the animation row for right movement
-    if keys[pygame.K_w]:  # Move up
-        dy = -5
-        player.set_animation(9)  # Set the animation row for up movement
-    if keys[pygame.K_s]:  # Move down
-        dy = 5
-        player.set_animation(9)
+        if not is_jumping:
+            player.set_animation(5)  # Right movement animation
+    else:
+        if not is_jumping:
+            player.set_animation(1)  # Resting animation
 
-    player.move(dx, dy)
-    player.update()  # Update animation frame
+    # Handle jumping
+    if keys[pygame.K_w] and not is_jumping:
+        player_velocity_y = jump_force
+        is_jumping = True
+        player.set_animation(7)  # Jump animation
+
+    # Apply gravity
+    player_velocity_y += gravity
+    player.rect.y += player_velocity_y
+
+    # Stop jumping when landing
+    if player.rect.y >= 300:  # Ground level (adjust as needed)
+        player.rect.y = 300
+        player_velocity_y = 0
+        is_jumping = False
+
+    # Update player position and animation
+    player.move(dx, 0)
+    player.update()
 
     # Check if the sprite falls below the screen
     if player.rect.y > SCREEN_HEIGHT:
@@ -65,9 +86,12 @@ while running:
         pygame.time.wait(2000)
         running = False
 
-    camera.follow_sprite(player)  # Update camera position
-    game_map.draw(screen, camera)  # Draw the map
-    player.draw(screen, camera)  # Draw the player
+    # Update the camera to follow the player
+    camera.follow_sprite(player)
+
+    # Draw everything
+    game_map.draw(screen, camera)
+    player.draw(screen, camera)
 
     pygame.display.flip()
     clock.tick(60)  # Limit to 60 FPS
