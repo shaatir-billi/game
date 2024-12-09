@@ -1,6 +1,6 @@
 import pygame
 import math
-from globals import *
+from utils.globals import *
 
 
 class GameMap:
