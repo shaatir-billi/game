@@ -1,4 +1,5 @@
 import pygame
+from utils.globals import *
 
 
 class Sprite:
