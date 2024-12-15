@@ -54,14 +54,29 @@ def play(SCREEN):
             player.jump()
 
         player.move(dx, dy)
-        player.update()
 
-        # Handle platform collision
+        # Handle platform collision and falling
+        on_platform = False
         for platform in platforms:
-            if player.rect.colliderect(platform.rect) and player.y_velocity > 0:
+            # Check if the player is on top of the platform
+            if (
+                player.rect.colliderect(platform.rect)
+                and player.y_velocity >= 0  # Falling or standing still
+                and player.rect.bottom <= platform.rect.top + 10  # Slight overlap allowed
+                # Within horizontal bounds
+                and platform.rect.left <= player.rect.centerx <= platform.rect.right
+            ):
                 player.rect.bottom = platform.rect.top
                 player.is_jumping = False
                 player.y_velocity = 0
+                on_platform = True
+                break
+
+        # If the player is not on any platform, apply gravity
+        if not on_platform and player.rect.bottom < game_map.ground_level:
+            player.is_jumping = True
+
+        player.update()
 
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
