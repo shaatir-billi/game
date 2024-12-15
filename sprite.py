@@ -1,9 +1,9 @@
 import pygame
-from utils.globals import *
+from utils.globals import SCREEN_HEIGHT
 
 
 class Sprite:
-    def __init__(self, sprite_sheet_path, x, y, frame_width, frame_height, scale=1):
+    def __init__(self, sprite_sheet_path, x, y, frame_width, frame_height, scale=1, ground_level=SCREEN_HEIGHT):
         """
         Initialize the sprite.
         :param sprite_sheet_path: Path to the sprite sheet
@@ -12,6 +12,7 @@ class Sprite:
         :param frame_width: Width of each frame in the sprite sheet
         :param frame_height: Height of each frame in the sprite sheet
         :param scale: Scaling factor for the sprite
+        :param ground_level: The y-coordinate representing the ground level
         """
         self.sprite_sheet = pygame.image.load(
             sprite_sheet_path).convert_alpha()
@@ -35,6 +36,7 @@ class Sprite:
         self.jump_velocity = -15  # Initial upward velocity for jump
         self.gravity = 1  # Gravity effect
         self.y_velocity = 0  # Vertical velocity
+        self.ground_level = ground_level  # Set the ground level for collision
 
     def _load_frames(self):
         """
@@ -89,14 +91,14 @@ class Sprite:
             frame = pygame.transform.flip(frame, True, False)
         self.image = frame
 
-        # Handle jumping
+        # Handle jumping and gravity
         if self.is_jumping:
-            self.y_velocity += self.gravity  # Apply gravity
-            self.rect.y += self.y_velocity  # Update vertical position
+            self.y_velocity += self.gravity
+            self.rect.y += self.y_velocity
 
-            # Check if landed
-            if self.rect.y >= SCREEN_HEIGHT - self.rect.height:  # Assuming ground level is screen bottom
-                self.rect.y = SCREEN_HEIGHT - self.rect.height
+            # Check if the sprite lands on the ground
+            if self.rect.bottom >= self.ground_level:
+                self.rect.bottom = self.ground_level
                 self.is_jumping = False
                 self.y_velocity = 0
 

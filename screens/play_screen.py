@@ -3,21 +3,22 @@ import sys
 from sprite import Sprite
 from map import GameMap
 from camera import Camera
-from utils.globals import SCREEN_WIDTH, SCREEN_HEIGHT
 from utils.globals import *
 
 
 def play(SCREEN):
-    game_map = GameMap("assets/map/sky.jpeg")
+    game_map = GameMap("assets/map/sky.jpeg",
+                       "assets/map/ground.png")
     camera = Camera((SCREEN_WIDTH, SCREEN_HEIGHT), map_width)
 
     player = Sprite(
         sprite_sheet_path="assets/sprites/player/sprite_sheet.png",
         x=100,
-        y=SCREEN_HEIGHT - 150,  # This should place the cat at the ground level
+        y=game_map.ground_level - 150,  # Adjust to spawn above the ground
         frame_width=32,
         frame_height=32,
-        scale=5
+        scale=5,
+        ground_level=game_map.ground_level  # Pass ground level to the sprite
     )
 
     clock = pygame.time.Clock()
@@ -39,7 +40,6 @@ def play(SCREEN):
             dx = 5
             player.set_animation(5)
 
-        # Jumping now triggered by the W key
         if keys[pygame.K_w]:
             player.jump()
 
