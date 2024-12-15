@@ -1,7 +1,7 @@
 import pygame
 import sys
 from sprite import Sprite
-from map import GameMap
+from map import *
 from camera import Camera
 from utils.globals import *
 
@@ -20,6 +20,16 @@ def play(SCREEN):
         scale=5,
         ground_level=game_map.ground_level  # Pass ground level to the sprite
     )
+
+    # Create platforms
+    platforms = [
+        Platform("assets/map/platform.png", 300,
+                 game_map.ground_level - 200, 200, 50),
+        Platform("assets/map/platform.png", 600,
+                 game_map.ground_level - 300, 200, 50),
+        Platform("assets/map/platform.png", 900,
+                 game_map.ground_level - 150, 200, 50),
+    ]
 
     clock = pygame.time.Clock()
 
@@ -46,8 +56,20 @@ def play(SCREEN):
         player.move(dx, dy)
         player.update()
 
+        # Handle platform collision
+        for platform in platforms:
+            if player.rect.colliderect(platform.rect) and player.y_velocity > 0:
+                player.rect.bottom = platform.rect.top
+                player.is_jumping = False
+                player.y_velocity = 0
+
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
+
+        # Draw platforms
+        for platform in platforms:
+            platform.draw(SCREEN, camera)
+
         player.draw(SCREEN, camera)
 
         pygame.display.flip()

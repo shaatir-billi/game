@@ -47,3 +47,26 @@ class GameMap:
         for x in range(0, tiles_upper):
             screen.blit(self.upper_layer_image,
                         ((x * self.upper_layer_width) - camera.x_offset, 0))
+
+
+class Platform:
+    def __init__(self, image_path, x, y, width, height):
+        """
+        Initialize the platform.
+        :param image_path: Path to the platform image
+        :param x: x-coordinate of the platform
+        :param y: y-coordinate of the platform
+        :param width: Width of the platform
+        :param height: Height of the platform
+        """
+        self.image = pygame.image.load(image_path).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def draw(self, screen, camera):
+        """
+        Draw the platform on the screen with camera adjustment.
+        :param screen: The game window
+        :param camera: Camera object
+        """
+        screen.blit(self.image, (self.rect.x - camera.x_offset, self.rect.y))
