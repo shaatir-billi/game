@@ -33,6 +33,9 @@ def play(SCREEN):
 
     clock = pygame.time.Clock()
 
+    # Add persistent horizontal velocity
+    player.horizontal_velocity = 0
+
     while True:
         SCREEN.fill("black")
         for event in pygame.event.get():
@@ -41,19 +44,25 @@ def play(SCREEN):
                 sys.exit()
 
         keys = pygame.key.get_pressed()
-        dx, dy = 0, 0
 
+        # Update horizontal velocity only if keys are pressed
         if keys[pygame.K_a]:
-            dx = -5
-            player.set_animation(5)
-        if keys[pygame.K_d]:
-            dx = 5
-            player.set_animation(5)
+            player.horizontal_velocity = -5
+            player.set_animation(5)  # Walking animation
+        elif keys[pygame.K_d]:
+            player.horizontal_velocity = 5
+            player.set_animation(5)  # Walking animation
+        else:
+            # Gradually stop horizontal movement on the ground
+            if not player.is_jumping:
+                player.horizontal_velocity = 0
 
+        # Jump logic
         if keys[pygame.K_w]:
             player.jump()
 
-        player.move(dx, dy)
+        # Move player horizontally and apply gravity for vertical movement
+        player.move(player.horizontal_velocity, 0)
 
         # Handle platform collision and falling
         on_platform = False
