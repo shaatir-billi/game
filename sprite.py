@@ -83,7 +83,7 @@ class Sprite:
         if not self.is_jumping:
             self.is_jumping = True
             self.y_velocity = self.jump_velocity
-            self.set_animation(3)  # Set to jump animation row
+            self.set_animation(8)  # Set to jump animation row
 
     def move(self, dx, dy):
         self.rect.x += dx

@@ -104,7 +104,7 @@ def main_menu(SCREEN):
         )
         OPTIONS_BUTTON = Button(
             image=pygame.image.load("assets/menu/play_button_rect.png"),
-            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.6),
+            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
             text_input="OPTIONS",
             font=get_font(50),
             base_color="#000000",
@@ -112,7 +112,7 @@ def main_menu(SCREEN):
         )
         QUIT_BUTTON = Button(
             image=pygame.image.load("assets/menu/play_button_rect.png"),
-            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.3),
+            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.2),
             text_input="QUIT",
             font=get_font(50),
             base_color="#000000",
