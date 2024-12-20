@@ -8,6 +8,7 @@ class Camera:
         self.screen_width = screen_size[0]
         self.map_width = map_width
         self.x_offset = 0  # Initial horizontal offset
+        self.y = 150
 
     def follow_sprite(self, sprite):
         """

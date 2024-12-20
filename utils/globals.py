@@ -1,7 +1,7 @@
 import math
 
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 1400
+SCREEN_HEIGHT = 750
 
 
 map_width = 5000
