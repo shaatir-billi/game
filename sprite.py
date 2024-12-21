@@ -1,18 +1,9 @@
 import pygame
-from utils.globals import *
+from utils.globals import SCREEN_HEIGHT
 
 
 class Sprite:
-    def __init__(self, sprite_sheet_path, x, y, frame_width, frame_height, scale=1):
-        """
-        Initialize the sprite.
-        :param sprite_sheet_path: Path to the sprite sheet
-        :param x: Initial x position
-        :param y: Initial y position
-        :param frame_width: Width of each frame in the sprite sheet
-        :param frame_height: Height of each frame in the sprite sheet
-        :param scale: Scaling factor for the sprite
-        """
+    def __init__(self, sprite_sheet_path, x, y, frame_width, frame_height, scale=1, ground_level=SCREEN_HEIGHT):
         self.sprite_sheet = pygame.image.load(
             sprite_sheet_path).convert_alpha()
         self.frame_width = frame_width
@@ -26,21 +17,19 @@ class Sprite:
         self.current_frame = 0
         self.animation_speed = 0.15
         self.timer = 0
-        self.flipped = False  # Tracks if the sprite should be flipped horizontally
+        self.flipped = False
 
         self.image = self.frames[self.current_row][self.current_frame]
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.is_moving = False  # Flag to track movement
-        self.is_jumping = False  # Jump state
-        self.jump_velocity = -15  # Initial upward velocity for jump
-        self.gravity = 1  # Gravity effect
-        self.y_velocity = 0  # Vertical velocity
+        self.is_moving = False
+        self.is_jumping = False
+        self.jump_velocity = -20  # Improved jump velocity for smoother arc
+        self.gravity = 1.2  # Adjusted gravity for better jump
+        self.max_fall_speed = 15  # Limit falling speed
+        self.y_velocity = 0
+        self.ground_level = ground_level
 
     def _load_frames(self):
-        """
-        Load and scale all frames from the sprite sheet.
-        :return: List of rows, each containing scaled frames.
-        """
         rows = []
         sheet_width = self.sprite_sheet.get_width()
         sheet_height = self.sprite_sheet.get_height()
@@ -61,71 +50,54 @@ class Sprite:
         return rows
 
     def set_animation(self, row):
-        """
-        Set the animation row only if it is different from the current row.
-        :param row: Row index for the animation in the sprite sheet
-        """
         if self.current_row != row:
             self.current_row = row
-            self.current_frame = 0  # Reset animation to the first frame
+            self.current_frame = 0
 
     def update(self):
-        """
-        Update the sprite's animation frame and handle jumping logic.
-        """
-        # Handle animation
         self.timer += self.animation_speed
         if self.timer >= 1:
             self.timer = 0
-            if self.is_moving or self.is_jumping:
-                self.current_frame = (self.current_frame +
-                                      1) % len(self.frames[self.current_row])
-            else:
-                self.current_frame = 0  # Keep resting on the first frame
+            self.current_frame = (self.current_frame +
+                                  1) % len(self.frames[self.current_row])
 
-        # Update the current frame and flip if needed
         frame = self.frames[self.current_row][self.current_frame]
         if self.flipped:
             frame = pygame.transform.flip(frame, True, False)
         self.image = frame
 
-        # Handle jumping
         if self.is_jumping:
-            self.y_velocity += self.gravity  # Apply gravity
-            self.rect.y += self.y_velocity  # Update vertical position
+            self.y_velocity = min(
+                self.y_velocity + self.gravity, self.max_fall_speed)
+            self.rect.y += self.y_velocity
 
-            # Check if landed
-            if self.rect.y >= SCREEN_HEIGHT - self.rect.height:  # Assuming ground level is screen bottom
-                self.rect.y = SCREEN_HEIGHT - self.rect.height
+            # Check for landing
+            if self.rect.bottom >= self.ground_level:
+                self.rect.bottom = self.ground_level
                 self.is_jumping = False
                 self.y_velocity = 0
+        else:
+            self.y_velocity = 0  # Reset y-velocity when not jumping
 
     def jump(self):
-        """
-        Initiate a jump if not already jumping.
-        """
         if not self.is_jumping:
             self.is_jumping = True
             self.y_velocity = self.jump_velocity
+            self.set_animation(8)  # Set to jump animation row
 
     def move(self, dx, dy):
-        """
-        Move the sprite and set movement state.
-        :param dx: Horizontal movement
-        :param dy: Vertical movement
-        """
         self.rect.x += dx
         self.rect.y += dy
-        self.is_moving = dx != 0  # Horizontal movement sets moving state
-        if dx < 0:  # Moving left
+        self.is_moving = dx != 0
+        if dx < 0:
             self.flipped = True
-        elif dx > 0:  # Moving right
+        elif dx > 0:
             self.flipped = False
 
+        if self.is_moving and not self.is_jumping:
+            self.set_animation(5)  # Set to walking animation
+        elif not self.is_moving and not self.is_jumping:
+            self.set_animation(0)  # Set to idle animation
+
     def draw(self, screen, camera):
-        """
-        Draw the sprite on the screen with camera adjustment.
-        :param screen: The game window
-        :param camera: Camera object
-        """
         screen.blit(self.image, (self.rect.x - camera.x_offset, self.rect.y))
