@@ -138,7 +138,7 @@ def main_menu(SCREEN):
                     sys.exit()
 
         # Update and draw the sprite
-        menu_sprite.update()
+        menu_sprite.update()  # Call update without delta_time
         menu_sprite.draw(SCREEN, camera)
 
         pygame.display.update()

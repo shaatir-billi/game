@@ -5,6 +5,7 @@ from map import *
 from camera import Camera
 from utils.globals import *
 from guard import Guard
+import random
 
 
 def play(SCREEN):
@@ -74,17 +75,40 @@ def play(SCREEN):
     ]
 
     Guards = [
-        Guard("assets/sprites/player/sprite_sheet.png",
-              platforms[11].rect, 32, 32, 5),
+        Guard("assets/sprites/enemy/girl_walk.png",
+              platforms[16].rect, 48, 48, 3.5),
         # Example guard on a long platform
-        Guard("assets/sprites/player/sprite_sheet.png",
-              platforms[15].rect, 32, 32, 5)
+        Guard("assets/sprites/enemy/girl.png",
+              platforms[15].rect, 48, 48, 3.5)
     ]
 
     clock = pygame.time.Clock()
 
     # Add persistent horizontal velocity
     player.horizontal_velocity = 0
+
+    health_display = []
+
+    def create_health_display():
+        for i in range(player.health):
+            heart = pygame.image.load('assets/menu/Grass1.png').convert_alpha()
+            heart_rect = heart.get_rect(topleft=(20 + i * 30, 20))
+            health_display.append((heart, heart_rect))
+
+    def update_health_display():
+        for i, (heart, heart_rect) in enumerate(health_display):
+            heart_rect.topleft = (20 + i * 30, 20)
+            if i < player.health:
+                heart.set_alpha(255)
+            else:
+                heart.set_alpha(0)
+
+    create_health_display()
+
+    def handle_guard_collision():
+        if not player.is_invincible:
+            player.take_damage()
+            update_health_display()
 
     while True:
         SCREEN.fill("black")
@@ -96,13 +120,18 @@ def play(SCREEN):
         # Guards logic
         for guard in Guards:
             guard.update()
-            guard.move(1, 0)  # Move guard to the right
-            if guard.rect.right > guard.platform_rect.right:
-                guard.rect.right = guard.platform_rect.right
-                guard.move(-1, 0)  # Move guard back to the left
-            elif guard.rect.left < guard.platform_rect.left:
-                guard.rect.left = guard.platform_rect.left
-                guard.move(1, 0)  # Move guard back to the right
+            guard.move(guard.horizontal_velocity, 0)  # Move guard
+
+            # Change direction slightly before reaching the platform's edge
+            if guard.rect.right >= guard.platform_rect.right - 30:
+                guard.rect.right = guard.platform_rect.right - 100
+                guard.horizontal_velocity = -1  # Change direction to left
+            elif guard.rect.left <= guard.platform_rect.left + 30:
+                guard.rect.left = guard.platform_rect.left + 100
+                guard.horizontal_velocity = 1  # Change direction to right
+
+            if player.collision_rect.colliderect(guard.collision_rect):
+                handle_guard_collision()
 
         # Player logic
         keys = pygame.key.get_pressed()
@@ -158,7 +187,7 @@ def play(SCREEN):
         if not on_platform and player.rect.bottom < game_map.ground_level:
             player.is_jumping = True
 
-        player.update()
+        player.update(clock.get_time())
 
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
@@ -173,6 +202,9 @@ def play(SCREEN):
             guard.draw(SCREEN, camera)
 
         player.draw(SCREEN, camera)
+
+        for heart, heart_rect in health_display:
+            SCREEN.blit(heart, heart_rect)
 
         pygame.display.flip()
         clock.tick(60)

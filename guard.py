@@ -28,6 +28,9 @@ class Guard():
         self.rect = self.image.get_rect(
             topleft=(platform_rect.left, platform_rect.top - self.scaled_height))
         self.is_moving = False
+        self.horizontal_velocity = 1  # Initial horizontal velocity
+        self.collision_rect = self.rect.inflate(
+            -self.rect.width * 0.5, -self.rect.height * 0.5)
 
     def _load_frames(self):
         rows = []
@@ -65,6 +68,7 @@ class Guard():
         if self.flipped:
             frame = pygame.transform.flip(frame, True, False)
         self.image = frame
+        self.collision_rect.topleft = self.rect.topleft
 
     def move(self, dx, dy):
         self.rect.x += dx
@@ -80,6 +84,7 @@ class Guard():
             self.rect.left = self.platform_rect.left
         elif self.rect.right > self.platform_rect.right:
             self.rect.right = self.platform_rect.right
+        self.collision_rect.topleft = self.rect.topleft
 
     def draw(self, screen, camera):
         screen.blit(self.image, (self.rect.x - camera.x_offset, self.rect.y))

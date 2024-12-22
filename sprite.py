@@ -21,6 +21,8 @@ class Sprite:
 
         self.image = self.frames[self.current_row][self.current_frame]
         self.rect = self.image.get_rect(topleft=(x, y))
+        self.collision_rect = self.rect.inflate(
+            -self.rect.width * 0.5, -self.rect.height * 0.5)
         self.is_moving = False
         self.is_jumping = False
         self.jump_velocity = -20  # Improved jump velocity for smoother arc
@@ -28,6 +30,13 @@ class Sprite:
         self.max_fall_speed = 15  # Limit falling speed
         self.y_velocity = 0
         self.ground_level = ground_level
+
+        self.health = 5
+        self.is_invincible = False
+        self.invincibility_timer = 0
+        self.blink_interval = 200  # milliseconds
+        self.blink_timer = 0
+        self.visible = True
 
     def _load_frames(self):
         rows = []
@@ -54,7 +63,7 @@ class Sprite:
             self.current_row = row
             self.current_frame = 0
 
-    def update(self):
+    def update(self, delta_time=0):
         self.timer += self.animation_speed
         if self.timer >= 1:
             self.timer = 0
@@ -79,6 +88,18 @@ class Sprite:
         else:
             self.y_velocity = 0  # Reset y-velocity when not jumping
 
+        if self.is_invincible:
+            self.invincibility_timer -= delta_time
+            self.blink_timer += delta_time
+            if self.blink_timer >= self.blink_interval:
+                self.visible = not self.visible
+                self.blink_timer = 0
+            if self.invincibility_timer <= 0:
+                self.is_invincible = False
+                self.visible = True
+
+        self.collision_rect.topleft = self.rect.topleft
+
     def jump(self):
         if not self.is_jumping:
             self.is_jumping = True
@@ -99,5 +120,26 @@ class Sprite:
         elif not self.is_moving and not self.is_jumping:
             self.set_animation(0)  # Set to idle animation
 
+        self.collision_rect.topleft = self.rect.topleft
+
     def draw(self, screen, camera):
-        screen.blit(self.image, (self.rect.x - camera.x_offset, self.rect.y))
+        if self.visible:
+            screen.blit(self.image, (self.rect.x -
+                        camera.x_offset, self.rect.y))
+
+    def take_damage(self):
+        if not self.is_invincible:
+            self.health -= 1
+            self.set_invincible()
+            if self.health <= 0:
+                self.die()
+
+    def set_invincible(self):
+        self.is_invincible = True
+        self.invincibility_timer = 4000  # 4 seconds
+        self.blink_timer = 0
+
+    def die(self):
+        # Game over logic here
+        print('Game Over')
+        # You might want to emit an event or call a game over function
