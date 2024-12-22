@@ -5,6 +5,7 @@ from map import *
 from camera import Camera
 from utils.globals import *
 from guard import Guard
+from hiding_spot import HidingSpot
 import random
 from screens.game_over_screen import game_over
 
@@ -77,10 +78,24 @@ def play(SCREEN):
 
     Guards = [
         Guard("assets/sprites/enemy/girl_walk.png",
-              platforms[16].rect, 48, 48, 3.5),
+              platforms[16].rect, 48, 48, 3),
         # Example guard on a long platform
         Guard("assets/sprites/enemy/girl.png",
-              platforms[15].rect, 48, 48, 3.5)
+              platforms[15].rect, 48, 48, 3)
+    ]
+
+    hiding_spots = [
+        # Specify the platform index, the position on the platform, and the scale
+        (16, 80, 1),  # Platform index 16, 80 pixels from the left, scale 3
+        (2, 30, 1),  # Platform index 2, 30 pixels from the left, scale 2
+        (5, 50, 1),  # Platform index 5, 50 pixels from the left, scale 2.5
+        # Add more hiding spots as needed
+    ]
+
+    hiding_spot_objects = [
+        HidingSpot(platforms[index].rect.x + offset,
+                   platforms[index].rect.y - 50, 50, 50, scale)
+        for index, offset, scale in hiding_spots
     ]
 
     clock = pygame.time.Clock()
@@ -106,10 +121,35 @@ def play(SCREEN):
 
     create_health_display()
 
+    hiding_cooldown = 500  # Cooldown period in milliseconds
+    last_hiding_time = 0
+    current_hiding_spot = None  # Track the current hiding spot
+
     def handle_guard_collision():
         if not player.is_invincible:
-            player.take_damage()
-            update_health_display()
+            for guard in Guards:
+                if player.collision_rect.colliderect(guard.collision_rect):
+                    # Check if the player is above the guard
+                    if player.rect.bottom <= guard.rect.top + 10:
+                        # Player is above the guard, no damage taken
+                        continue
+                    player.take_damage()
+                    update_health_display()
+
+    def handle_hiding():
+        nonlocal last_hiding_time, current_hiding_spot
+        current_time = pygame.time.get_ticks()
+        if current_time - last_hiding_time > hiding_cooldown:
+            for spot in hiding_spot_objects:
+                if player.rect.colliderect(spot.rect):
+                    if keys[pygame.K_e]:
+                        if player.is_hidden:
+                            player.unhide()
+                            current_hiding_spot = None
+                        else:
+                            player.hide()
+                            current_hiding_spot = spot
+                        last_hiding_time = current_time
 
     while True:
         SCREEN.fill("black")
@@ -117,6 +157,8 @@ def play(SCREEN):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+        keys = pygame.key.get_pressed()
 
         # Guards logic
         for guard in Guards:
@@ -131,12 +173,10 @@ def play(SCREEN):
                 guard.rect.left = guard.platform_rect.left + 100
                 guard.horizontal_velocity = 1  # Change direction to right
 
-            if player.collision_rect.colliderect(guard.collision_rect):
-                handle_guard_collision()
+        # Handle guard collision
+        handle_guard_collision()
 
         # Player logic
-        keys = pygame.key.get_pressed()
-
         # Update horizontal velocity only if keys are pressed
         if keys[pygame.K_a]:
             player.horizontal_velocity = -5
@@ -155,6 +195,9 @@ def play(SCREEN):
 
         # Move player horizontally and apply gravity for vertical movement
         player.move(player.horizontal_velocity, 0)
+
+        # Handle hiding
+        handle_hiding()
 
         # Handle platform collision and falling
         on_platform = False
@@ -201,6 +244,10 @@ def play(SCREEN):
 
         for guard in Guards:
             guard.draw(SCREEN, camera)
+
+        for spot in hiding_spot_objects:
+            spot.draw(SCREEN, camera, player.is_hidden and spot ==
+                      current_hiding_spot)
 
         player.draw(SCREEN, camera)
 
