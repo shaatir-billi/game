@@ -1,5 +1,6 @@
 import pygame
 from utils.globals import SCREEN_HEIGHT
+from screens.game_over_screen import game_over
 
 
 class Sprite:
@@ -142,4 +143,5 @@ class Sprite:
     def die(self):
         # Game over logic here
         print('Game Over')
-        # You might want to emit an event or call a game over function
+        from screens.play_screen import play
+        game_over(pygame.display.get_surface(), play)

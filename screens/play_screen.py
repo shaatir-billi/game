@@ -6,6 +6,7 @@ from camera import Camera
 from utils.globals import *
 from guard import Guard
 import random
+from screens.game_over_screen import game_over
 
 
 def play(SCREEN):
