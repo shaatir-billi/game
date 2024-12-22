@@ -6,6 +6,7 @@ from camera import Camera
 from utils.globals import *
 from guard import Guard
 from shopkeeper import Shopkeeper
+from fish import Fish
 import random
 from screens.game_over_screen import game_over
 
@@ -93,6 +94,14 @@ def play(SCREEN):
         scale=3.5
     )
 
+    # Add the fish
+    fish = Fish(
+        sprite_sheet_path="assets/sprites/fish/fish.png",
+        frame_width=260,
+        frame_height=110,
+        scale=0.5 # Adjust scale to make fish smaller
+    )
+
     clock = pygame.time.Clock()
 
     # Add persistent horizontal velocity
@@ -155,6 +164,9 @@ def play(SCREEN):
         elif shopkeeper.rect.left <= shopkeeper.ground_rect.left + 30:
             shopkeeper.rect.left = shopkeeper.ground_rect.left + 100
             shopkeeper.horizontal_velocity = 1  # Change direction to right
+
+        # Fish logic
+        fish.update()
 
         # Player logic
         keys = pygame.key.get_pressed()
@@ -226,6 +238,11 @@ def play(SCREEN):
 
         # Draw the shopkeeper
         shopkeeper.draw(SCREEN, camera)
+
+        # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
+        fish_x = shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
+        fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - 20  # Adjust to be slightly above the ground
+        fish.draw(SCREEN, fish_x - camera.x_offset, fish_y)
 
         player.draw(SCREEN, camera)
 
