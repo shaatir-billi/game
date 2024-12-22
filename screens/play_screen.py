@@ -102,6 +102,8 @@ def play(SCREEN):
         scale=0.5 # Adjust scale to make fish smaller
     )
 
+    fish_picked_up = False
+
     clock = pygame.time.Clock()
 
     # Add persistent horizontal velocity
@@ -137,19 +139,42 @@ def play(SCREEN):
                 pygame.quit()
                 sys.exit()
 
-        # Guards logic
+        # # Guards logic
+        # for guard in Guards:
+        #     guard.update()
+        #     guard.move(guard.horizontal_velocity, 0)  # Move guard
+
+        #     # Change direction slightly before reaching the platform's edge
+        #     if guard.rect.right >= guard.platform_rect.right - 30:
+        #         guard.rect.right = guard.platform_rect.right - 100
+        #         guard.horizontal_velocity = -1  # Change direction to left
+        #     elif guard.rect.left <= guard.platform_rect.left + 30:
+        #         guard.rect.left = guard.platform_rect.left + 100
+        #         guard.horizontal_velocity = 1  # Change direction to right
+
+        #     if player.collision_rect.colliderect(guard.collision_rect):
+        #         handle_guard_collision()
+        # Initialize a dictionary to store distance_traveled for each guard
+        distance_traveled = {guard: 0 for guard in Guards}
+
         for guard in Guards:
             guard.update()
             guard.move(guard.horizontal_velocity, 0)  # Move guard
 
-            # Change direction slightly before reaching the platform's edge
-            if guard.rect.right >= guard.platform_rect.right - 30:
-                guard.rect.right = guard.platform_rect.right - 100
-                guard.horizontal_velocity = -1  # Change direction to left
-            elif guard.rect.left <= guard.platform_rect.left + 30:
-                guard.rect.left = guard.platform_rect.left + 100
-                guard.horizontal_velocity = 1  # Change direction to right
+            # Update the distance traveled for this guard
+            distance_traveled[guard] += abs(guard.horizontal_velocity)
 
+            # Change direction near platform edges
+            if guard.rect.right >= guard.platform_rect.right - 30:
+                guard.rect.right = guard.platform_rect.right - 31
+                guard.horizontal_velocity = -1  # Reverse direction
+                distance_traveled[guard] = 0  # Reset distance after direction change
+            elif guard.rect.left <= guard.platform_rect.left + 30:
+                guard.rect.left = guard.platform_rect.left + 31
+                guard.horizontal_velocity = 1  # Reverse direction
+                distance_traveled[guard] = 0  # Reset distance after direction change
+
+            # Collision detection with player
             if player.collision_rect.colliderect(guard.collision_rect):
                 handle_guard_collision()
 
@@ -207,16 +232,16 @@ def play(SCREEN):
                 on_platform = True
                 break
 
-        for wall in Walls:
-            if player.rect.colliderect(wall.rect):
-                overlap_left = wall.rect.right - player.rect.left
-                overlap_right = player.rect.right - wall.rect.left
-                # check if player is on the left side of the wall
-                if abs(overlap_left) < abs(overlap_right):
-                    player.rect.left = wall.rect.right
-                # check if player is on the right side of the wall
-                else:
-                    player.rect.right = wall.rect.left
+        # for wall in Walls:
+        #     if player.rect.colliderect(wall.rect):
+        #         overlap_left = wall.rect.right - player.rect.left
+        #         overlap_right = player.rect.right - wall.rect.left
+        #         # check if player is on the left side of the wall
+        #         if abs(overlap_left) < abs(overlap_right):
+        #             player.rect.left = wall.rect.right
+        #         # check if player is on the right side of the wall
+        #         else:
+        #             player.rect.right = wall.rect.left
 
                 # If the player is not on any platform, apply gravity
         if not on_platform and player.rect.bottom < game_map.ground_level:
@@ -224,25 +249,50 @@ def play(SCREEN):
 
         player.update(clock.get_time())
 
+        # Update player's collision rectangle
+        player.collision_rect.topleft = player.rect.topleft
+        
+
+       
+
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
 
         for platform in platforms:
             platform.draw(SCREEN, camera)
 
-        for wall in Walls:
-            wall.draw(SCREEN, camera)
+        # for wall in Walls:
+        #     wall.draw(SCREEN, camera)
 
         for guard in Guards:
             guard.draw(SCREEN, camera)
 
         # Draw the shopkeeper
         shopkeeper.draw(SCREEN, camera)
+        
+        BUFFER = 120  # You can adjust this value based on how much space you want to allow
+
+        # Create extended collision rectangles with the buffer
+        player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER) 
+
+        # Check if the player picks up the fish
+        if not fish_picked_up:
+            if player_buffered_rect.colliderect(fish.rect):
+                if keys[pygame.K_q]:  # Press 'Q' to pick up the fish
+                    fish_picked_up = True
 
         # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
-        fish_x = shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
-        fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - 20  # Adjust to be slightly above the ground
-        fish.draw(SCREEN, fish_x - camera.x_offset, fish_y)
+        if not fish_picked_up:
+            fish_x = shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
+            fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - 20  # Adjust to be slightly above the ground
+            fish.draw(SCREEN, fish_x - camera.x_offset, fish_y)
+            fish.rect.topleft = (fish_x, fish_y)
+        else:
+            # Draw the fish on top of the player, touching but not covering the player
+            fish.rect.midbottom = player.rect.midtop  # Ensure the fish is exactly on top of the player
+            fish.rect.y = player.rect.top - fish.rect.height  # No gap, fish sits directly on top
+            fish.rect.x = player.rect.centerx - fish.rect.width // 2  # Center horizontally
+            fish.draw(SCREEN, fish.rect.x - camera.x_offset, fish.rect.y)
 
         player.draw(SCREEN, camera)
 
