@@ -4,6 +4,7 @@ from sprite import Sprite
 from map import *
 from camera import Camera
 from utils.globals import *
+from guard import Guard
 
 
 def play(SCREEN):
@@ -22,8 +23,6 @@ def play(SCREEN):
     )
 
     ground = game_map.ground_level
-
-    d = False
     # Width:
     # 50 = 1 tile
     # 100 = 2 tiles and so on
@@ -71,8 +70,15 @@ def play(SCREEN):
     # Wall at the 2500 division line.
 
     Walls = [
-
         Platform("assets/map/platform.png", 2500, 300, 50, 550),
+    ]
+
+    Guards = [
+        Guard("assets/sprites/player/sprite_sheet.png",
+              platforms[11].rect, 32, 32, 5),
+        # Example guard on a long platform
+        Guard("assets/sprites/player/sprite_sheet.png",
+              platforms[15].rect, 32, 32, 5)
     ]
 
     clock = pygame.time.Clock()
@@ -87,6 +93,18 @@ def play(SCREEN):
                 pygame.quit()
                 sys.exit()
 
+        # Guards logic
+        for guard in Guards:
+            guard.update()
+            guard.move(1, 0)  # Move guard to the right
+            if guard.rect.right > guard.platform_rect.right:
+                guard.rect.right = guard.platform_rect.right
+                guard.move(-1, 0)  # Move guard back to the left
+            elif guard.rect.left < guard.platform_rect.left:
+                guard.rect.left = guard.platform_rect.left
+                guard.move(1, 0)  # Move guard back to the right
+
+        # Player logic
         keys = pygame.key.get_pressed()
 
         # Update horizontal velocity only if keys are pressed
@@ -150,6 +168,9 @@ def play(SCREEN):
 
         for wall in Walls:
             wall.draw(SCREEN, camera)
+
+        for guard in Guards:
+            guard.draw(SCREEN, camera)
 
         player.draw(SCREEN, camera)
 
