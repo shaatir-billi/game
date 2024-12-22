@@ -5,6 +5,7 @@ from map import *
 from camera import Camera
 from utils.globals import *
 from guard import Guard
+from shopkeeper import Shopkeeper
 import random
 from screens.game_over_screen import game_over
 
@@ -76,12 +77,21 @@ def play(SCREEN):
     ]
 
     Guards = [
-        Guard("assets/sprites/enemy/girl_walk.png",
+        Guard("assets/sprites/guard/girl_walk.png",
               platforms[16].rect, 48, 48, 3.5),
         # Example guard on a long platform
-        Guard("assets/sprites/enemy/girl.png",
+        Guard("assets/sprites/guard/girl_walk.png",
               platforms[15].rect, 48, 48, 3.5)
     ]
+
+    # Add the shopkeeper on the opposite side of the wall
+    shopkeeper = Shopkeeper(
+        sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
+        ground_rect=pygame.Rect(Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
+        frame_width=48,
+        frame_height=48,
+        scale=3.5
+    )
 
     clock = pygame.time.Clock()
 
@@ -133,6 +143,18 @@ def play(SCREEN):
 
             if player.collision_rect.colliderect(guard.collision_rect):
                 handle_guard_collision()
+
+        # Shopkeeper logic
+        shopkeeper.update()
+        shopkeeper.move(shopkeeper.horizontal_velocity, 0)  # Move shopkeeper
+
+        # Change direction slightly before reaching the ground's edge
+        if shopkeeper.rect.right >= shopkeeper.ground_rect.right - 30:
+            shopkeeper.rect.right = shopkeeper.ground_rect.right - 100
+            shopkeeper.horizontal_velocity = -1  # Change direction to left
+        elif shopkeeper.rect.left <= shopkeeper.ground_rect.left + 30:
+            shopkeeper.rect.left = shopkeeper.ground_rect.left + 100
+            shopkeeper.horizontal_velocity = 1  # Change direction to right
 
         # Player logic
         keys = pygame.key.get_pressed()
@@ -201,6 +223,9 @@ def play(SCREEN):
 
         for guard in Guards:
             guard.draw(SCREEN, camera)
+
+        # Draw the shopkeeper
+        shopkeeper.draw(SCREEN, camera)
 
         player.draw(SCREEN, camera)
 
