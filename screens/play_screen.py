@@ -123,6 +123,7 @@ def play(SCREEN):
 
     hiding_cooldown = 500  # Cooldown period in milliseconds
     last_hiding_time = 0
+    current_hiding_spot = None  # Track the current hiding spot
 
     def handle_guard_collision():
         if not player.is_invincible:
@@ -136,7 +137,7 @@ def play(SCREEN):
                     update_health_display()
 
     def handle_hiding():
-        nonlocal last_hiding_time
+        nonlocal last_hiding_time, current_hiding_spot
         current_time = pygame.time.get_ticks()
         if current_time - last_hiding_time > hiding_cooldown:
             for spot in hiding_spot_objects:
@@ -144,8 +145,10 @@ def play(SCREEN):
                     if keys[pygame.K_e]:
                         if player.is_hidden:
                             player.unhide()
+                            current_hiding_spot = None
                         else:
                             player.hide()
+                            current_hiding_spot = spot
                         last_hiding_time = current_time
 
     while True:
@@ -243,7 +246,8 @@ def play(SCREEN):
             guard.draw(SCREEN, camera)
 
         for spot in hiding_spot_objects:
-            spot.draw(SCREEN, camera, player.is_hidden)
+            spot.draw(SCREEN, camera, player.is_hidden and spot ==
+                      current_hiding_spot)
 
         player.draw(SCREEN, camera)
 
