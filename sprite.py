@@ -10,9 +10,12 @@ class Sprite:
         self.frame_width = frame_width
         self.frame_height = frame_height
         self.scale = scale
+
+        # Calculate scaled width and height based on scale factor
         self.scaled_width = int(frame_width * scale)
         self.scaled_height = int(frame_height * scale)
 
+        # Load frames with the correct scaling
         self.frames = self._load_frames()
         self.current_row = 0
         self.current_frame = 0
@@ -20,10 +23,17 @@ class Sprite:
         self.timer = 0
         self.flipped = False
 
+        # Initial frame setup
         self.image = self.frames[self.current_row][self.current_frame]
         self.rect = self.image.get_rect(topleft=(x, y))
+
+        # Collision box (adjusted scaling)
         self.collision_rect = self.rect.inflate(
-            -self.rect.width * 0.3, -self.rect.height * 0.3)
+            # Reduced scaling factor for collision box
+            -self.rect.width * 0.5, -self.rect.height * 0.0001
+        )
+        # Adjust the top position to maintain the same bottom position
+
         self.is_moving = False
         self.is_jumping = False
         self.jump_velocity = -20  # Improved jump velocity for smoother arc
@@ -54,6 +64,8 @@ class Sprite:
                 y = row * self.frame_height
                 frame = self.sprite_sheet.subsurface(
                     pygame.Rect(x, y, self.frame_width, self.frame_height))
+
+                # Scale each frame after extracting it from the sprite sheet
                 scaled_frame = pygame.transform.scale(
                     frame, (self.scaled_width, self.scaled_height))
                 frames.append(scaled_frame)
@@ -148,8 +160,7 @@ class Sprite:
         self.blink_timer = 0
 
     def die(self):
-        # Game over logic here
-        print('Game Over')
+        # Game over logic
         from screens.play_screen import play
         game_over(pygame.display.get_surface(), play)
 
