@@ -1,5 +1,5 @@
 import pygame
-from player import handle_player_logic
+from screens.player import handle_player_logic
 
 
 def handle_guard_collision(player, Guards, update_health_display):

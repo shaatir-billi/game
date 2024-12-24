@@ -5,9 +5,9 @@ from utils.globals import *
 from shopkeeper import Shopkeeper
 from fish import Fish
 from screens.game_over_screen import game_over
-from game_map import *
-from player import create_player, handle_player_logic
-from game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
+from screens.game_map import *
+from screens.player import create_player, handle_player_logic
+from screens.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
 
 
 def play(SCREEN):
