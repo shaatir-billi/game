@@ -210,9 +210,9 @@ def play(SCREEN):
                       camera.x_offset, fish_position[1])
             fish.rect.topleft = fish_position
         else:
-            # Draw the "Fish picked up" message above the player
+            # Draw the "Fish picked up" message below the player
             message_rect = message_surface.get_rect(
-                center=(player.rect.centerx - camera.x_offset, player.rect.top - 5))  # Adjusted y-coordinate
+                center=(player.rect.centerx - camera.x_offset, player.rect.bottom + 5))  # Adjusted y-coordinate
             SCREEN.blit(message_surface, message_rect)
 
         player.draw(SCREEN, camera)
