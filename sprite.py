@@ -148,8 +148,7 @@ class Sprite:
         self.blink_timer = 0
 
     def die(self):
-        # Game over logic here
-        print('Game Over')
+        # Gane over logic
         from screens.play_screen import play
         game_over(pygame.display.get_surface(), play)
 

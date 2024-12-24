@@ -4,11 +4,9 @@ from sprite import Sprite
 from map import *
 from camera import Camera
 from utils.globals import *
-from guard import Guard
 from shopkeeper import Shopkeeper
 from fish import Fish
-from hiding_spot import HidingSpot
-import random
+from screens.setup_map import create_platforms, create_walls, create_guards, create_hiding_spots
 from screens.game_over_screen import game_over
 
 
@@ -28,77 +26,12 @@ def play(SCREEN):
     )
 
     ground = game_map.ground_level
-    # Width:
-    # 50 = 1 tile
-    # 100 = 2 tiles and so on
 
-    # Create platforms
-    platforms = [
-
-        # 2 tiles
-        Platform("assets/map/platform.png", 2000, ground - 30, 100, 50),
-        Platform("assets/map/platform.png", 2100, ground - 80, 100, 50),
-        Platform("assets/map/platform.png", 2200, ground - 140, 100, 50),
-        Platform("assets/map/platform.png", 1200, ground - 350, 100, 50),
-        Platform("assets/map/platform.png", 1200, ground - 350, 100, 50),
-        Platform("assets/map/platform.png", 3600, ground - 100, 100, 50),
-
-        # 3 tiles
-        Platform("assets/map/platform.png", 2300, ground - 250, 200, 50),
-        Platform("assets/map/platform.png", 1600, ground - 630, 200, 50),
-        Platform("assets/map/platform.png", 1900, ground - 630, 200, 50),
-        Platform("assets/map/platform.png", 2700, ground - 550, 200, 50),
-        Platform("assets/map/platform.png", 2580, ground - 100, 200, 50),
-
-
-        # 4 tiles
-        Platform("assets/map/platform.png", 1000, ground - 200, 250, 50),
-        Platform("assets/map/platform.png", 2100, ground - 400, 250, 50),
-        Platform("assets/map/platform.png", 3500, ground - 550, 250, 50),
-        Platform("assets/map/platform.png", 2630, ground - 280, 250, 50),
-        Platform("assets/map/platform.png", 3350, ground - 290, 250, 50),
-
-
-
-        # Long platforms
-        Platform("assets/map/platform.png", 1350, ground - 270, 800, 50),
-        Platform("assets/map/platform.png", 700, ground - 400, 400, 50),
-        Platform("assets/map/platform.png", 1000, ground - 550, 500, 50),
-        Platform("assets/map/platform.png", 0, ground - 640, 900, 50),
-        Platform("assets/map/platform.png", 2230, ground - 700, 1200, 50),
-        Platform("assets/map/platform.png", 2900, ground - 200, 600, 50),
-        Platform("assets/map/platform.png", 3000, ground - 460, 400, 50),
-
-
-    ]
-
-    # Wall at the 2500 division line.
-
-    Walls = [
-        Platform("assets/map/platform.png", 2500, 300, 50, 550),
-    ]
-
-    Guards = [
-        Guard("assets/sprites/guard/girl_walk.png",
-              platforms[16].rect, 48, 48, 3.5),
-        # Example guard on a long platform
-        Guard("assets/sprites/guard/girl_walk.png",
-              platforms[15].rect, 48, 48, 3.5)
-    ]
-
-    hiding_spots = [
-        # Specify the platform index, the position on the platform, and the scale
-        (16, 80, 1),  # Platform index 16, 80 pixels from the left, scale 3
-        (2, 30, 1),  # Platform index 2, 30 pixels from the left, scale 2
-        (5, 50, 1),  # Platform index 5, 50 pixels from the left, scale 2.5
-        # Add more hiding spots as needed
-    ]
-
-    hiding_spot_objects = [
-        HidingSpot(platforms[index].rect.x + offset,
-                   platforms[index].rect.y - 50, 50, 50, scale)
-        for index, offset, scale in hiding_spots
-    ]
+    # Create platforms, walls, guards, and hiding spots
+    platforms = create_platforms(ground)
+    Walls = create_walls()
+    Guards = create_guards(platforms)
+    hiding_spot_objects = create_hiding_spots(platforms)
 
     # Add the shopkeeper on the opposite side of the wall
     shopkeeper = Shopkeeper(
@@ -107,7 +40,7 @@ def play(SCREEN):
             Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
         frame_width=48,
         frame_height=48,
-        scale=3.5
+        scale=3
     )
 
     # Add the fish
@@ -119,6 +52,7 @@ def play(SCREEN):
     )
 
     fish_picked_up = False
+    fish_position = None  # Track the fish's position when dropped
 
     clock = pygame.time.Clock()
 
@@ -173,6 +107,14 @@ def play(SCREEN):
                             current_hiding_spot = spot
                         last_hiding_time = current_time
 
+    def handle_shopkeeper_collision():
+        nonlocal fish_picked_up, fish_position
+        if player.collision_rect.colliderect(shopkeeper.collision_rect):
+            fish_picked_up = False
+            # Drop the fish at the player's position
+            fish_position = (player.rect.centerx,
+                             player.rect.bottom - fish.rect.height // 2)
+
     while True:
         SCREEN.fill("black")
         for event in pygame.event.get():
@@ -180,48 +122,21 @@ def play(SCREEN):
                 pygame.quit()
                 sys.exit()
 
-        # # Guards logic
-        # for guard in Guards:
-        #     guard.update()
-        #     guard.move(guard.horizontal_velocity, 0)  # Move guard
-
-        #     # Change direction slightly before reaching the platform's edge
-        #     if guard.rect.right >= guard.platform_rect.right - 30:
-        #         guard.rect.right = guard.platform_rect.right - 100
-        #         guard.horizontal_velocity = -1  # Change direction to left
-        #     elif guard.rect.left <= guard.platform_rect.left + 30:
-        #         guard.rect.left = guard.platform_rect.left + 100
-        #         guard.horizontal_velocity = 1  # Change direction to right
-
-        #     if player.collision_rect.colliderect(guard.collision_rect):
-        #         handle_guard_collision()
-        # Initialize a dictionary to store distance_traveled for each guard
-        distance_traveled = {guard: 0 for guard in Guards}
-
         keys = pygame.key.get_pressed()
 
         # Guards logic
-
         for guard in Guards:
             guard.update()
             guard.move(guard.horizontal_velocity, 0)  # Move guard
 
-            # Update the distance traveled for this guard
-            distance_traveled[guard] += abs(guard.horizontal_velocity)
-
-            # Change direction near platform edges
+            # Change direction slightly before reaching the platform's edge
             if guard.rect.right >= guard.platform_rect.right - 30:
-                guard.rect.right = guard.platform_rect.right - 31
-                guard.horizontal_velocity = -1  # Reverse direction
-                # Reset distance after direction change
-                distance_traveled[guard] = 0
+                guard.rect.right = guard.platform_rect.right - 100
+                guard.horizontal_velocity = -1  # Change direction to left
             elif guard.rect.left <= guard.platform_rect.left + 30:
-                guard.rect.left = guard.platform_rect.left + 31
-                guard.horizontal_velocity = 1  # Reverse direction
-                # Reset distance after direction change
-                distance_traveled[guard] = 0
+                guard.rect.left = guard.platform_rect.left + 100
+                guard.horizontal_velocity = 1  # Change direction to right
 
-            # Collision detection with player
             if player.collision_rect.colliderect(guard.collision_rect):
                 handle_guard_collision()
 
@@ -239,6 +154,9 @@ def play(SCREEN):
         elif shopkeeper.rect.left <= shopkeeper.ground_rect.left + 30:
             shopkeeper.rect.left = shopkeeper.ground_rect.left + 100
             shopkeeper.horizontal_velocity = 1  # Change direction to right
+
+        # Handle shopkeeper collision
+        handle_shopkeeper_collision()
 
         # Fish logic
         fish.update()
@@ -326,26 +244,33 @@ def play(SCREEN):
         # Create extended collision rectangles with the buffer
         player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER)
 
-        # Check if the player picks up the fish
-        if not fish_picked_up:
-            if player_buffered_rect.colliderect(fish.rect):
-                if keys[pygame.K_q]:  # Press 'Q' to pick up the fish
-                    fish_picked_up = True
+        # Check if the player picks up or drops the fish
+        if keys[pygame.K_q]:
+            if not fish_picked_up and player_buffered_rect.colliderect(fish.rect):
+                fish_picked_up = True
+            elif fish_picked_up:
+                fish_picked_up = False
+                # Drop the fish at the player's position
+                fish_position = (player.rect.centerx,
+                                 player.rect.bottom - fish.rect.height // 2)
 
         # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
         if not fish_picked_up:
-            fish_x = shopkeeper.ground_rect.left + \
-                (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
-            fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - \
-                20  # Adjust to be slightly above the ground
-            fish.draw(SCREEN, fish_x - camera.x_offset, fish_y)
-            fish.rect.topleft = (fish_x, fish_y)
+            if fish_position is None:
+                fish_x = shopkeeper.ground_rect.left + \
+                    (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
+                fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - \
+                    20  # Adjust to be slightly above the ground
+                fish_position = (fish_x, fish_y)
+            fish.draw(SCREEN, fish_position[0] -
+                      camera.x_offset, fish_position[1])
+            fish.rect.topleft = fish_position
         else:
             # Draw the fish on top of the player, touching but not covering the player
             # Ensure the fish is exactly on top of the player
             fish.rect.midbottom = player.rect.midtop
-            # No gap, fish sits directly on top
-            fish.rect.y = player.rect.top - fish.rect.height
+            fish.rect.y = player.rect.bottom - \
+                fish.rect.height + 10  # Slightly above the ground
             fish.rect.x = player.rect.centerx - fish.rect.width // 2  # Center horizontally
             fish.draw(SCREEN, fish.rect.x - camera.x_offset, fish.rect.y)
 
