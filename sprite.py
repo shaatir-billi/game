@@ -23,7 +23,7 @@ class Sprite:
         self.image = self.frames[self.current_row][self.current_frame]
         self.rect = self.image.get_rect(topleft=(x, y))
         self.collision_rect = self.rect.inflate(
-            -self.rect.width * 0.5, -self.rect.height * 0.5)
+            -self.rect.width * 0.3, -self.rect.height * 0.3)
         self.is_moving = False
         self.is_jumping = False
         self.jump_velocity = -20  # Improved jump velocity for smoother arc
@@ -38,6 +38,7 @@ class Sprite:
         self.blink_interval = 200  # milliseconds
         self.blink_timer = 0
         self.visible = True
+        self.is_hidden = False
 
     def _load_frames(self):
         rows = []
@@ -63,6 +64,11 @@ class Sprite:
         if self.current_row != row:
             self.current_row = row
             self.current_frame = 0
+            # Set animation speed to zero if idle
+            if row == 0:  # Assuming row 0 is the idle animation
+                self.animation_speed = 0
+            else:
+                self.animation_speed = 0.15
 
     def update(self, delta_time=0):
         self.timer += self.animation_speed
@@ -108,20 +114,21 @@ class Sprite:
             self.set_animation(8)  # Set to jump animation row
 
     def move(self, dx, dy):
-        self.rect.x += dx
-        self.rect.y += dy
-        self.is_moving = dx != 0
-        if dx < 0:
-            self.flipped = True
-        elif dx > 0:
-            self.flipped = False
+        if not self.is_hidden:
+            self.rect.x += dx
+            self.rect.y += dy
+            self.is_moving = dx != 0
+            if dx < 0:
+                self.flipped = True
+            elif dx > 0:
+                self.flipped = False
 
-        if self.is_moving and not self.is_jumping:
-            self.set_animation(5)  # Set to walking animation
-        elif not self.is_moving and not self.is_jumping:
-            self.set_animation(0)  # Set to idle animation
+            if self.is_moving and not self.is_jumping:
+                self.set_animation(5)  # Set to walking animation
+            elif not self.is_moving and not self.is_jumping:
+                self.set_animation(0)  # Set to idle animation
 
-        self.collision_rect.topleft = self.rect.topleft
+            self.collision_rect.topleft = self.rect.topleft
 
     def draw(self, screen, camera):
         if self.visible:
@@ -129,7 +136,7 @@ class Sprite:
                         camera.x_offset, self.rect.y))
 
     def take_damage(self):
-        if not self.is_invincible:
+        if not self.is_invincible and not self.is_hidden:
             self.health -= 1
             self.set_invincible()
             if self.health <= 0:
@@ -145,3 +152,11 @@ class Sprite:
         print('Game Over')
         from screens.play_screen import play
         game_over(pygame.display.get_surface(), play)
+
+    def hide(self):
+        self.is_hidden = True
+        self.visible = False
+
+    def unhide(self):
+        self.is_hidden = False
+        self.visible = True

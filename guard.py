@@ -5,9 +5,7 @@ from utils.globals import SCREEN_HEIGHT
 
 
 class Guard():
-    def __init__(
-        self, sprite_sheet_path, platform_rect, frame_width, frame_height, scale=1
-    ):
+    def __init__(self, sprite_sheet_path, platform_rect, frame_width, frame_height, scale=1):
         self.sprite_sheet = pygame.image.load(
             sprite_sheet_path).convert_alpha()
         self.frame_width = frame_width
@@ -29,6 +27,8 @@ class Guard():
             topleft=(platform_rect.left, platform_rect.top - self.scaled_height))
         self.is_moving = False
         self.horizontal_velocity = 1  # Initial horizontal velocity
+
+        # Define the size of the collision rectangle here
         self.collision_rect = self.rect.inflate(
             -self.rect.width * 0.5, -self.rect.height * 0.5)
 

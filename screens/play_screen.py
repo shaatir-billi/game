@@ -7,6 +7,7 @@ from utils.globals import *
 from guard import Guard
 from shopkeeper import Shopkeeper
 from fish import Fish
+from hiding_spot import HidingSpot
 import random
 from screens.game_over_screen import game_over
 
@@ -85,10 +86,25 @@ def play(SCREEN):
               platforms[15].rect, 48, 48, 3.5)
     ]
 
+    hiding_spots = [
+        # Specify the platform index, the position on the platform, and the scale
+        (16, 80, 1),  # Platform index 16, 80 pixels from the left, scale 3
+        (2, 30, 1),  # Platform index 2, 30 pixels from the left, scale 2
+        (5, 50, 1),  # Platform index 5, 50 pixels from the left, scale 2.5
+        # Add more hiding spots as needed
+    ]
+
+    hiding_spot_objects = [
+        HidingSpot(platforms[index].rect.x + offset,
+                   platforms[index].rect.y - 50, 50, 50, scale)
+        for index, offset, scale in hiding_spots
+    ]
+
     # Add the shopkeeper on the opposite side of the wall
     shopkeeper = Shopkeeper(
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
-        ground_rect=pygame.Rect(Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
+        ground_rect=pygame.Rect(
+            Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
         frame_width=48,
         frame_height=48,
         scale=3.5
@@ -99,7 +115,7 @@ def play(SCREEN):
         sprite_sheet_path="assets/sprites/fish/fish.png",
         frame_width=260,
         frame_height=110,
-        scale=0.5 # Adjust scale to make fish smaller
+        scale=0.5  # Adjust scale to make fish smaller
     )
 
     fish_picked_up = False
@@ -127,10 +143,35 @@ def play(SCREEN):
 
     create_health_display()
 
+    hiding_cooldown = 500  # Cooldown period in milliseconds
+    last_hiding_time = 0
+    current_hiding_spot = None  # Track the current hiding spot
+
     def handle_guard_collision():
         if not player.is_invincible:
-            player.take_damage()
-            update_health_display()
+            for guard in Guards:
+                if player.collision_rect.colliderect(guard.collision_rect):
+                    # Check if the player is above the guard
+                    if player.rect.bottom <= guard.rect.top + 10:
+                        # Player is above the guard, no damage taken
+                        continue
+                    player.take_damage()
+                    update_health_display()
+
+    def handle_hiding():
+        nonlocal last_hiding_time, current_hiding_spot
+        current_time = pygame.time.get_ticks()
+        if current_time - last_hiding_time > hiding_cooldown:
+            for spot in hiding_spot_objects:
+                if player.rect.colliderect(spot.rect):
+                    if keys[pygame.K_e]:
+                        if player.is_hidden:
+                            player.unhide()
+                            current_hiding_spot = None
+                        else:
+                            player.hide()
+                            current_hiding_spot = spot
+                        last_hiding_time = current_time
 
     while True:
         SCREEN.fill("black")
@@ -157,6 +198,10 @@ def play(SCREEN):
         # Initialize a dictionary to store distance_traveled for each guard
         distance_traveled = {guard: 0 for guard in Guards}
 
+        keys = pygame.key.get_pressed()
+
+        # Guards logic
+
         for guard in Guards:
             guard.update()
             guard.move(guard.horizontal_velocity, 0)  # Move guard
@@ -168,15 +213,20 @@ def play(SCREEN):
             if guard.rect.right >= guard.platform_rect.right - 30:
                 guard.rect.right = guard.platform_rect.right - 31
                 guard.horizontal_velocity = -1  # Reverse direction
-                distance_traveled[guard] = 0  # Reset distance after direction change
+                # Reset distance after direction change
+                distance_traveled[guard] = 0
             elif guard.rect.left <= guard.platform_rect.left + 30:
                 guard.rect.left = guard.platform_rect.left + 31
                 guard.horizontal_velocity = 1  # Reverse direction
-                distance_traveled[guard] = 0  # Reset distance after direction change
+                # Reset distance after direction change
+                distance_traveled[guard] = 0
 
             # Collision detection with player
             if player.collision_rect.colliderect(guard.collision_rect):
                 handle_guard_collision()
+
+        # Handle guard collision
+        handle_guard_collision()
 
         # Shopkeeper logic
         shopkeeper.update()
@@ -194,8 +244,6 @@ def play(SCREEN):
         fish.update()
 
         # Player logic
-        keys = pygame.key.get_pressed()
-
         # Update horizontal velocity only if keys are pressed
         if keys[pygame.K_a]:
             player.horizontal_velocity = -5
@@ -214,6 +262,9 @@ def play(SCREEN):
 
         # Move player horizontally and apply gravity for vertical movement
         player.move(player.horizontal_velocity, 0)
+
+        # Handle hiding
+        handle_hiding()
 
         # Handle platform collision and falling
         on_platform = False
@@ -251,9 +302,6 @@ def play(SCREEN):
 
         # Update player's collision rectangle
         player.collision_rect.topleft = player.rect.topleft
-        
-
-       
 
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
@@ -266,14 +314,17 @@ def play(SCREEN):
 
         for guard in Guards:
             guard.draw(SCREEN, camera)
-
         # Draw the shopkeeper
         shopkeeper.draw(SCREEN, camera)
-        
+
+        for spot in hiding_spot_objects:
+            spot.draw(SCREEN, camera, player.is_hidden and spot ==
+                      current_hiding_spot)
+
         BUFFER = 120  # You can adjust this value based on how much space you want to allow
 
         # Create extended collision rectangles with the buffer
-        player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER) 
+        player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER)
 
         # Check if the player picks up the fish
         if not fish_picked_up:
@@ -283,14 +334,18 @@ def play(SCREEN):
 
         # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
         if not fish_picked_up:
-            fish_x = shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
-            fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - 20  # Adjust to be slightly above the ground
+            fish_x = shopkeeper.ground_rect.left + \
+                (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
+            fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - \
+                20  # Adjust to be slightly above the ground
             fish.draw(SCREEN, fish_x - camera.x_offset, fish_y)
             fish.rect.topleft = (fish_x, fish_y)
         else:
             # Draw the fish on top of the player, touching but not covering the player
-            fish.rect.midbottom = player.rect.midtop  # Ensure the fish is exactly on top of the player
-            fish.rect.y = player.rect.top - fish.rect.height  # No gap, fish sits directly on top
+            # Ensure the fish is exactly on top of the player
+            fish.rect.midbottom = player.rect.midtop
+            # No gap, fish sits directly on top
+            fish.rect.y = player.rect.top - fish.rect.height
             fish.rect.x = player.rect.centerx - fish.rect.width // 2  # Center horizontally
             fish.draw(SCREEN, fish.rect.x - camera.x_offset, fish.rect.y)
 
