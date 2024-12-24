@@ -1,6 +1,7 @@
 import pygame
 from utils.globals import SCREEN_HEIGHT
 
+
 class Shopkeeper():
     def __init__(
         self, sprite_sheet_path, ground_rect, frame_width, frame_height, scale=1

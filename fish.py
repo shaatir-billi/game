@@ -1,12 +1,15 @@
 import pygame
 
+
 class Fish():
     def __init__(self, sprite_sheet_path, frame_width, frame_height, scale=1):
-        self.sprite_sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+        self.sprite_sheet = pygame.image.load(
+            sprite_sheet_path).convert_alpha()
         self.frame_width = frame_width
         self.frame_height = frame_height
         self.scale = scale
-        self.scaled_width = int(frame_width * scale * 0.5)  # Adjust scaling to a reasonable size
+        # Adjust scaling to a reasonable size
+        self.scaled_width = int(frame_width * scale * 0.5)
         self.scaled_height = int(frame_height * scale * 0.5)
 
         self.frames = self._load_frames()
@@ -46,7 +49,3 @@ class Fish():
     def draw(self, screen, x, y, debug=False):
         self.rect.topleft = (x, y)
         screen.blit(self.image, self.rect)
-
-        # Optional: Draw debug rectangle to see the boundaries of the scaled fish
-        if debug:
-            pygame.draw.rect(screen, (255, 0, 0), self.rect, 1)  # Red border

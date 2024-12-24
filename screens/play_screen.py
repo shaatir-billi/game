@@ -87,17 +87,20 @@ def play(SCREEN):
 
     while True:
         SCREEN.fill("black")
-        # Debug prints for player and fish rectangles
-        print(f"Player rect: {player.rect}")
-        print(f"Fish rect: {fish.rect}")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                fish_picked_up, fish_position, last_fish_action_time = handle_fish_pickup(
-                    player, fish, fish_picked_up, fish_position, last_fish_action_time, fish_cooldown)
+                if event.key == pygame.K_q:  # Check if 'q' key is pressed
+                    print("Button pressed")
+                    print("Player position:", player.rect.topleft)
+                    print("Player collision rectangle:",
+                          player.collision_rect.topleft)
+
+                    fish_picked_up, fish_position, last_fish_action_time = handle_fish_pickup(
+                        player, fish, fish_picked_up, fish_position, last_fish_action_time, fish_cooldown)
 
         keys = pygame.key.get_pressed()
 
@@ -201,11 +204,6 @@ def play(SCREEN):
             spot.draw(SCREEN, camera, player.is_hidden and spot ==
                       current_hiding_spot)
 
-        BUFFER = 120  # You can adjust this value based on how much space you want to allow
-
-        # Create extended collision rectangles with the buffer
-        player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER)
-
         # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
         if not fish_picked_up:
             fish.draw(SCREEN, fish_position[0] -
@@ -221,10 +219,6 @@ def play(SCREEN):
 
         for heart, heart_rect in health_display:
             SCREEN.blit(heart, heart_rect)
-
-        # Draw debug rectangles
-        pygame.draw.rect(SCREEN, (255, 0, 0), player.rect, 2)  # Red for player
-        pygame.draw.rect(SCREEN, (0, 255, 0), fish.rect, 2)  # Green for fish
 
         pygame.display.flip()
         clock.tick(60)
