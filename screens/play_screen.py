@@ -1,29 +1,20 @@
 import pygame
 import sys
-from sprite import Sprite
-from map import *
 from camera import Camera
 from utils.globals import *
 from shopkeeper import Shopkeeper
 from fish import Fish
-from screens.setup_map import create_platforms, create_walls, create_guards, create_hiding_spots
 from screens.game_over_screen import game_over
+from game_map import *
+from player import create_player, handle_player_logic
+from game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
 
 
 def play(SCREEN):
-    game_map = GameMap("assets/map/sky.jpeg",
-                       "assets/map/ground.png")
+    game_map = create_game_map()
     camera = Camera((SCREEN_WIDTH, SCREEN_HEIGHT), map_width)
 
-    player = Sprite(
-        sprite_sheet_path="assets/sprites/player/sprite_sheet.png",
-        x=100,
-        y=game_map.ground_level - 150,  # Adjust to spawn above the ground
-        frame_width=32,
-        frame_height=32,
-        scale=5,
-        ground_level=game_map.ground_level  # Pass ground level to the sprite
-    )
+    player = create_player(game_map)
 
     ground = game_map.ground_level
 
@@ -85,7 +76,8 @@ def play(SCREEN):
 
     create_health_display()
 
-    hiding_cooldown = 500  # Cooldown period in milliseconds
+    hiding_cooldown = 0  # Cooldown period in milliseconds
+    hiding_buffer = 500  # Buffer period in milliseconds
     last_hiding_time = 0
     current_hiding_spot = None  # Track the current hiding spot
 
@@ -93,59 +85,19 @@ def play(SCREEN):
     message_surface = font.render(
         "Fish picked up", True, (255, 255, 255))  # Rendered message surface
 
-    def handle_guard_collision():
-        if not player.is_invincible:
-            for guard in Guards:
-                if player.collision_rect.colliderect(guard.collision_rect):
-                    # Check if the player is above the guard
-                    if player.rect.bottom <= guard.rect.top + 10:
-                        # Player is above the guard, no damage taken
-                        continue
-                    player.take_damage()
-                    update_health_display()
-
-    def handle_hiding():
-        nonlocal last_hiding_time, current_hiding_spot
-        current_time = pygame.time.get_ticks()
-        if current_time - last_hiding_time > hiding_cooldown:
-            for spot in hiding_spot_objects:
-                if player.rect.colliderect(spot.rect):
-                    if keys[pygame.K_e]:
-                        if player.is_hidden:
-                            player.unhide()
-                            current_hiding_spot = None
-                        else:
-                            player.hide()
-                            current_hiding_spot = spot
-                        last_hiding_time = current_time
-
-    def handle_shopkeeper_collision():
-        nonlocal fish_picked_up, fish_position
-        if fish_picked_up and player.collision_rect.colliderect(shopkeeper.collision_rect):
-            fish_picked_up = False
-            # Reset positions of shopkeeper and fish
-            shopkeeper.rect.topleft = original_shopkeeper_position
-            fish_position = original_fish_position
-
     while True:
         SCREEN.fill("black")
+        # Debug prints for player and fish rectangles
+        print(f"Player rect: {player.rect}")
+        print(f"Fish rect: {fish.rect}")
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                current_time = pygame.time.get_ticks()
-                if event.key == pygame.K_q and current_time - last_fish_action_time > fish_cooldown:
-                    if not fish_picked_up and player.collision_rect.colliderect(fish.rect):
-                        fish_picked_up = True
-                        print("Fish picked up")
-                    elif fish_picked_up:
-                        fish_picked_up = False
-                        # Drop the fish at the player's position
-                        fish_position = (player.rect.centerx,
-                                         player.rect.bottom - fish.rect.height // 2)
-                        print("Fish dropped")
-                    last_fish_action_time = current_time
+                fish_picked_up, fish_position, last_fish_action_time = handle_fish_pickup(
+                    player, fish, fish_picked_up, fish_position, last_fish_action_time, fish_cooldown)
 
         keys = pygame.key.get_pressed()
 
@@ -163,10 +115,10 @@ def play(SCREEN):
                 guard.horizontal_velocity = 1  # Change direction to right
 
             if player.collision_rect.colliderect(guard.collision_rect):
-                handle_guard_collision()
+                handle_guard_collision(player, Guards, update_health_display)
 
         # Handle guard collision
-        handle_guard_collision()
+        handle_guard_collision(player, Guards, update_health_display)
 
         # Shopkeeper logic
         shopkeeper.update()
@@ -181,33 +133,18 @@ def play(SCREEN):
             shopkeeper.horizontal_velocity = 1  # Change direction to right
 
         # Handle shopkeeper collision
-        handle_shopkeeper_collision()
+        fish_picked_up, fish_position = handle_shopkeeper_collision(
+            player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
 
         # Fish logic
         fish.update()
 
         # Player logic
-        # Update horizontal velocity only if keys are pressed
-        if keys[pygame.K_a]:
-            player.horizontal_velocity = -5
-            player.set_animation(5)  # Walking animation
-        elif keys[pygame.K_d]:
-            player.horizontal_velocity = 5
-            player.set_animation(5)  # Walking animation
-        else:
-            # Gradually stop horizontal movement on the ground
-            if not player.is_jumping:
-                player.horizontal_velocity = 0
-
-        # Jump logic
-        if keys[pygame.K_w]:
-            player.jump()
-
-        # Move player horizontally and apply gravity for vertical movement
-        player.move(player.horizontal_velocity, 0)
+        handle_player_logic(player, keys)
 
         # Handle hiding
-        handle_hiding()
+        last_hiding_time, current_hiding_spot = handle_hiding(
+            player, hiding_spot_objects, keys, last_hiding_time, hiding_cooldown, hiding_buffer, current_hiding_spot)
 
         # Handle platform collision and falling
         on_platform = False
@@ -277,13 +214,17 @@ def play(SCREEN):
         else:
             # Draw the "Fish picked up" message above the player
             message_rect = message_surface.get_rect(
-                center=(player.rect.centerx - camera.x_offset, player.rect.top - 10))
+                center=(player.rect.centerx - camera.x_offset, player.rect.top - 5))  # Adjusted y-coordinate
             SCREEN.blit(message_surface, message_rect)
 
         player.draw(SCREEN, camera)
 
         for heart, heart_rect in health_display:
             SCREEN.blit(heart, heart_rect)
+
+        # Draw debug rectangles
+        pygame.draw.rect(SCREEN, (255, 0, 0), player.rect, 2)  # Red for player
+        pygame.draw.rect(SCREEN, (0, 255, 0), fish.rect, 2)  # Green for fish
 
         pygame.display.flip()
         clock.tick(60)

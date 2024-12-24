@@ -1,6 +1,11 @@
-from map import Platform
+from map import GameMap, Platform
 from guard import Guard
 from hiding_spot import HidingSpot
+
+
+def create_game_map():
+    game_map = GameMap("assets/map/sky.jpeg", "assets/map/ground.png")
+    return game_map
 
 
 def create_platforms(ground):
