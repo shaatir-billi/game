@@ -43,6 +43,8 @@ def play(SCREEN):
         scale=3
     )
 
+    original_shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
+
     # Add the fish
     fish = Fish(
         sprite_sheet_path="assets/sprites/fish/fish.png",
@@ -51,8 +53,14 @@ def play(SCREEN):
         scale=0.5  # Adjust scale to make fish smaller
     )
 
+    original_fish_position = (shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2),
+                              shopkeeper.ground_rect.bottom - fish.rect.height - 20)
+
     fish_picked_up = False
-    fish_position = None  # Track the fish's position when dropped
+    # Track the fish's position when dropped
+    fish_position = original_fish_position
+    fish_cooldown = 500  # Cooldown period in milliseconds
+    last_fish_action_time = 0
 
     clock = pygame.time.Clock()
 
@@ -80,6 +88,10 @@ def play(SCREEN):
     hiding_cooldown = 500  # Cooldown period in milliseconds
     last_hiding_time = 0
     current_hiding_spot = None  # Track the current hiding spot
+
+    font = pygame.font.Font(None, 24)  # Font for the message
+    message_surface = font.render(
+        "Fish picked up", True, (255, 255, 255))  # Rendered message surface
 
     def handle_guard_collision():
         if not player.is_invincible:
@@ -109,11 +121,11 @@ def play(SCREEN):
 
     def handle_shopkeeper_collision():
         nonlocal fish_picked_up, fish_position
-        if player.collision_rect.colliderect(shopkeeper.collision_rect):
+        if fish_picked_up and player.collision_rect.colliderect(shopkeeper.collision_rect):
             fish_picked_up = False
-            # Drop the fish at the player's position
-            fish_position = (player.rect.centerx,
-                             player.rect.bottom - fish.rect.height // 2)
+            # Reset positions of shopkeeper and fish
+            shopkeeper.rect.topleft = original_shopkeeper_position
+            fish_position = original_fish_position
 
     while True:
         SCREEN.fill("black")
@@ -121,6 +133,19 @@ def play(SCREEN):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                current_time = pygame.time.get_ticks()
+                if event.key == pygame.K_q and current_time - last_fish_action_time > fish_cooldown:
+                    if not fish_picked_up and player.collision_rect.colliderect(fish.rect):
+                        fish_picked_up = True
+                        print("Fish picked up")
+                    elif fish_picked_up:
+                        fish_picked_up = False
+                        # Drop the fish at the player's position
+                        fish_position = (player.rect.centerx,
+                                         player.rect.bottom - fish.rect.height // 2)
+                        print("Fish dropped")
+                    last_fish_action_time = current_time
 
         keys = pygame.key.get_pressed()
 
@@ -244,35 +269,16 @@ def play(SCREEN):
         # Create extended collision rectangles with the buffer
         player_buffered_rect = player.collision_rect.inflate(BUFFER, BUFFER)
 
-        # Check if the player picks up or drops the fish
-        if keys[pygame.K_q]:
-            if not fish_picked_up and player_buffered_rect.colliderect(fish.rect):
-                fish_picked_up = True
-            elif fish_picked_up:
-                fish_picked_up = False
-                # Drop the fish at the player's position
-                fish_position = (player.rect.centerx,
-                                 player.rect.bottom - fish.rect.height // 2)
-
         # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
         if not fish_picked_up:
-            if fish_position is None:
-                fish_x = shopkeeper.ground_rect.left + \
-                    (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2)
-                fish_y = shopkeeper.ground_rect.bottom - fish.rect.height - \
-                    20  # Adjust to be slightly above the ground
-                fish_position = (fish_x, fish_y)
             fish.draw(SCREEN, fish_position[0] -
                       camera.x_offset, fish_position[1])
             fish.rect.topleft = fish_position
         else:
-            # Draw the fish on top of the player, touching but not covering the player
-            # Ensure the fish is exactly on top of the player
-            fish.rect.midbottom = player.rect.midtop
-            fish.rect.y = player.rect.bottom - \
-                fish.rect.height + 10  # Slightly above the ground
-            fish.rect.x = player.rect.centerx - fish.rect.width // 2  # Center horizontally
-            fish.draw(SCREEN, fish.rect.x - camera.x_offset, fish.rect.y)
+            # Draw the "Fish picked up" message above the player
+            message_rect = message_surface.get_rect(
+                center=(player.rect.centerx - camera.x_offset, player.rect.top - 10))
+            SCREEN.blit(message_surface, message_rect)
 
         player.draw(SCREEN, camera)
 
