@@ -8,6 +8,7 @@ from screens.game_over_screen import game_over
 from screens.game_map import *
 from screens.player import create_player, handle_player_logic
 from screens.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
+from screens.game_finish_screen import game_finish  # Import the game finish screen
 
 
 def play(SCREEN):
@@ -84,6 +85,13 @@ def play(SCREEN):
     font = pygame.font.Font(None, 24)  # Font for the message
     message_surface = font.render(
         "Fish picked up", True, (255, 255, 255))  # Rendered message surface
+
+    barrel_image = pygame.image.load(
+        "assets/map/Fishbarrel2.png").convert_alpha()
+    barrel_image = pygame.transform.scale(barrel_image, (barrel_image.get_width(
+    ) * 3.5, barrel_image.get_height() * 4))  # Scale the barrel image
+    barrel_rect = barrel_image.get_rect(
+        topleft=(0, ground - 640 - barrel_image.get_height()))
 
     while True:
         SCREEN.fill("black")
@@ -215,10 +223,18 @@ def play(SCREEN):
                 center=(player.rect.centerx - camera.x_offset, player.rect.bottom + 5))  # Adjusted y-coordinate
             SCREEN.blit(message_surface, message_rect)
 
+        # Check if the player reaches the barrel with the fish
+        if fish_picked_up and player.collision_rect.colliderect(barrel_rect):
+            game_finish(SCREEN)  # Display the game finish screen
+
         player.draw(SCREEN, camera)
 
         for heart, heart_rect in health_display:
             SCREEN.blit(heart, heart_rect)
+
+        # Draw the barrel
+        SCREEN.blit(barrel_image, (barrel_rect.x -
+                    camera.x_offset, barrel_rect.y))
 
         pygame.display.flip()
         clock.tick(60)
