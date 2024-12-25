@@ -93,6 +93,8 @@ def play(SCREEN):
     barrel_rect = barrel_image.get_rect(
         topleft=(0, ground - 640 - barrel_image.get_height()))
 
+    shopkeeper_chasing = False  # Flag to indicate if the shopkeeper is chasing the player
+
     while True:
         SCREEN.fill("black")
 
@@ -131,9 +133,21 @@ def play(SCREEN):
         # Handle guard collision
         handle_guard_collision(player, Guards, update_health_display)
 
+        # Check if the player picks up the fish
+        if not shopkeeper_chasing and fish_picked_up:
+            shopkeeper_chasing = True  # Start chasing the player
+
         # Shopkeeper logic
         shopkeeper.update()
-        shopkeeper.move(shopkeeper.horizontal_velocity, 0)  # Move shopkeeper
+        if shopkeeper_chasing:
+            # Make the shopkeeper chase the player
+            if player.rect.x < shopkeeper.rect.x:
+                shopkeeper.move(-2, 0)  # Move left
+            elif player.rect.x > shopkeeper.rect.x:
+                shopkeeper.move(2, 0)  # Move right
+        else:
+            shopkeeper.move(shopkeeper.horizontal_velocity,
+                            0)  # Move shopkeeper normally
 
         # Change direction slightly before reaching the ground's edge
         if shopkeeper.rect.right >= shopkeeper.ground_rect.right - 30:
