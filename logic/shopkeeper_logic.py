@@ -6,8 +6,15 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         elif player.rect.x > shopkeeper.rect.x:
             shopkeeper.move(2, 0)  # Move right
     else:
-        shopkeeper.move(shopkeeper.horizontal_velocity,
-                        0)  # Move shopkeeper normally
+        # Make the shopkeeper patrol
+        if shopkeeper.rect.right >= 2600 and shopkeeper.rect.right < 4000 and shopkeeper.moving_right:
+            shopkeeper.move(2, 0)
+            if shopkeeper.rect.right >= 4000:
+                shopkeeper.moving_right = False
+        elif shopkeeper.rect.right <= 4000 and not shopkeeper.moving_right:
+            shopkeeper.move(-2, 0)
+            if shopkeeper.rect.right <= 2600:
+                shopkeeper.moving_right = True
 
     # Ensure the shopkeeper stays within the map bounds
     if shopkeeper.rect.left < 0:

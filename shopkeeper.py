@@ -20,6 +20,7 @@ class Shopkeeper():
         self.animation_speed = 0.15
         self.timer = 0
         self.flipped = False
+        self.moving_right = True  # Add moving_right attribute
 
         self.image = self.frames[self.current_row][self.current_frame]
         self.rect = self.image.get_rect()
