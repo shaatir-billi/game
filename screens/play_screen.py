@@ -28,12 +28,12 @@ def play(SCREEN):
     # Add the shopkeeper on the opposite side of the wall
     shopkeeper = Shopkeeper(
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
-        ground_rect=pygame.Rect(
-            Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
         frame_width=48,
         frame_height=48,
         scale=3
     )
+    shopkeeper.rect.topleft = (
+        Walls[0].rect.right + 200, ground - shopkeeper.rect.height)
 
     original_shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
 
@@ -45,8 +45,8 @@ def play(SCREEN):
         scale=0.5  # Adjust scale to make fish smaller
     )
 
-    original_fish_position = (shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2),
-                              shopkeeper.ground_rect.bottom - fish.rect.height - 20)
+    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2),
+                              ground - fish.rect.height - 20)
 
     fish_picked_up = False
     # Track the fish's position when dropped
@@ -149,13 +149,11 @@ def play(SCREEN):
             shopkeeper.move(shopkeeper.horizontal_velocity,
                             0)  # Move shopkeeper normally
 
-        # Change direction slightly before reaching the ground's edge
-        if shopkeeper.rect.right >= shopkeeper.ground_rect.right - 30:
-            shopkeeper.rect.right = shopkeeper.ground_rect.right - 100
-            shopkeeper.horizontal_velocity = -1  # Change direction to left
-        elif shopkeeper.rect.left <= shopkeeper.ground_rect.left + 30:
-            shopkeeper.rect.left = shopkeeper.ground_rect.left + 100
-            shopkeeper.horizontal_velocity = 1  # Change direction to right
+        # Ensure the shopkeeper stays within the map bounds
+        if shopkeeper.rect.left < 0:
+            shopkeeper.rect.left = 0
+        elif shopkeeper.rect.right > map_width:
+            shopkeeper.rect.right = map_width
 
         # Handle shopkeeper collision
         fish_picked_up, fish_position = handle_shopkeeper_collision(
@@ -192,18 +190,7 @@ def play(SCREEN):
                 on_platform = True
                 break
 
-        # for wall in Walls:
-        #     if player.rect.colliderect(wall.rect):
-        #         overlap_left = wall.rect.right - player.rect.left
-        #         overlap_right = player.rect.right - wall.rect.left
-        #         # check if player is on the left side of the wall
-        #         if abs(overlap_left) < abs(overlap_right):
-        #             player.rect.left = wall.rect.right
-        #         # check if player is on the right side of the wall
-        #         else:
-        #             player.rect.right = wall.rect.left
-
-                # If the player is not on any platform, apply gravity
+        # If the player is not on any platform, apply gravity
         if not on_platform and player.rect.bottom < game_map.ground_level:
             player.is_jumping = True
 
@@ -217,9 +204,6 @@ def play(SCREEN):
 
         for platform in platforms:
             platform.draw(SCREEN, camera)
-
-        # for wall in Walls:
-        #     wall.draw(SCREEN, camera)
 
         for guard in Guards:
             guard.draw(SCREEN, camera)

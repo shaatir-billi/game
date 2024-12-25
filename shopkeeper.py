@@ -4,7 +4,7 @@ from utils.globals import SCREEN_HEIGHT
 
 class Shopkeeper():
     def __init__(
-        self, sprite_sheet_path, ground_rect, frame_width, frame_height, scale=1
+        self, sprite_sheet_path, frame_width, frame_height, scale=1
     ):
         self.sprite_sheet = pygame.image.load(
             sprite_sheet_path).convert_alpha()
@@ -22,9 +22,7 @@ class Shopkeeper():
         self.flipped = False
 
         self.image = self.frames[self.current_row][self.current_frame]
-        self.ground_rect = ground_rect
-        self.rect = self.image.get_rect(
-            bottomright=(ground_rect.right, ground_rect.bottom))
+        self.rect = self.image.get_rect()
         self.is_moving = False
         self.horizontal_velocity = 1  # Initial horizontal velocity
         self.collision_rect = self.rect.inflate(
@@ -77,11 +75,6 @@ class Shopkeeper():
         elif dx > 0:
             self.flipped = False
 
-        # Ensure the shopkeeper stays within the ground bounds
-        if self.rect.left < self.ground_rect.left:
-            self.rect.left = self.ground_rect.left
-        elif self.rect.right > self.ground_rect.right:
-            self.rect.right = self.ground_rect.right
         self.collision_rect.topleft = self.rect.topleft
 
     def draw(self, screen, camera):
