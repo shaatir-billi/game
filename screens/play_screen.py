@@ -161,6 +161,10 @@ def play(SCREEN):
         fish_picked_up, fish_position = handle_shopkeeper_collision(
             player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
 
+        # Stop the shopkeeper from chasing if the fish is dropped
+        if not fish_picked_up:
+            shopkeeper_chasing = False
+
         # Fish logic
         fish.update()
 
