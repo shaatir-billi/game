@@ -4,7 +4,7 @@ from utils.globals import SCREEN_HEIGHT
 
 class Shopkeeper():
     def __init__(
-        self, sprite_sheet_path, frame_width, frame_height, scale=1
+        self, sprite_sheet_path, frame_width, frame_height, scale=1, ground_level=SCREEN_HEIGHT
     ):
         self.sprite_sheet = pygame.image.load(
             sprite_sheet_path).convert_alpha()
@@ -27,6 +27,12 @@ class Shopkeeper():
         self.horizontal_velocity = 1  # Initial horizontal velocity
         self.collision_rect = self.rect.inflate(
             -self.rect.width * 0.5, -self.rect.height * 0.5)
+        self.is_jumping = False
+        self.jump_velocity = -20
+        self.gravity = 1.2
+        self.max_fall_speed = 15
+        self.y_velocity = 0
+        self.ground_level = ground_level
 
     def _load_frames(self):
         rows = []
@@ -66,15 +72,41 @@ class Shopkeeper():
         self.image = frame
         self.collision_rect.topleft = self.rect.topleft
 
+        # Check if the shopkeeper is in the jumping state
+        if self.is_jumping:
+            # Apply gravity to the vertical velocity, but do not exceed the max fall speed
+            self.y_velocity = min(
+                self.y_velocity + self.gravity, self.max_fall_speed)
+            # Update the vertical position based on the vertical velocity
+            self.rect.y += self.y_velocity
+
+            # Check if the shopkeeper has landed on the ground
+            if self.rect.bottom >= self.ground_level:
+                # Snap the shopkeeper to the ground level
+                self.rect.bottom = self.ground_level
+                # End the jumping state
+                self.is_jumping = False
+                # Reset the vertical velocity
+                self.y_velocity = 0
+
+            else:
+                # Reset the vertical velocity when not jumping
+                self.y_velocity = 0
+
     def move(self, dx, dy):
+        # Update the horizontal position based on the horizontal velocity
         self.rect.x += dx
+        # Update the vertical position based on the vertical velocity
         self.rect.y += dy
+        # Set the moving state to True
         self.is_moving = True
+        # Check the direction of movement to flip the sprite accordingly
         if dx < 0:
             self.flipped = True
         elif dx > 0:
             self.flipped = False
 
+        # Update the collision rectangle's position to match the sprite's position
         self.collision_rect.topleft = self.rect.topleft
 
     def draw(self, screen, camera):

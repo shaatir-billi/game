@@ -7,8 +7,13 @@ from fish import Fish
 from screens.game_over_screen import game_over
 from screens.game_map import *
 from screens.player import create_player, handle_player_logic
-from screens.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
+from logic.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
 from screens.game_finish_screen import game_finish  # Import the game finish screen
+# Import health display functions
+from utils.health_display import create_health_display, update_health_display
+# Import shopkeeper logic functions
+from logic.shopkeeper_logic import handle_shopkeeper_movement, handle_shopkeeper_chase
+from logic.draw_logic import draw_game_elements  # Corrected import statement
 
 
 def play(SCREEN):
@@ -30,7 +35,8 @@ def play(SCREEN):
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
         frame_width=48,
         frame_height=48,
-        scale=3
+        scale=3,
+        ground_level=ground
     )
     shopkeeper.rect.topleft = (
         Walls[0].rect.right + 200, ground - shopkeeper.rect.height)
@@ -59,23 +65,7 @@ def play(SCREEN):
     # Add persistent horizontal velocity
     player.horizontal_velocity = 0
 
-    health_display = []
-
-    def create_health_display():
-        for i in range(player.health):
-            heart = pygame.image.load('assets/menu/Grass1.png').convert_alpha()
-            heart_rect = heart.get_rect(topleft=(20 + i * 30, 20))
-            health_display.append((heart, heart_rect))
-
-    def update_health_display():
-        for i, (heart, heart_rect) in enumerate(health_display):
-            heart_rect.topleft = (20 + i * 30, 20)
-            if i < player.health:
-                heart.set_alpha(255)
-            else:
-                heart.set_alpha(0)
-
-    create_health_display()
+    health_display = create_health_display(player.health)
 
     hiding_cooldown = 0  # Cooldown period in milliseconds
     hiding_buffer = 500  # Buffer period in milliseconds
@@ -128,10 +118,12 @@ def play(SCREEN):
                 guard.horizontal_velocity = 1  # Change direction to right
 
             if player.collision_rect.colliderect(guard.collision_rect):
-                handle_guard_collision(player, Guards, update_health_display)
+                handle_guard_collision(player, Guards, lambda: update_health_display(
+                    health_display, player.health))
 
         # Handle guard collision
-        handle_guard_collision(player, Guards, update_health_display)
+        handle_guard_collision(player, Guards, lambda: update_health_display(
+            health_display, player.health))
 
         # Check if the player picks up the fish
         if not shopkeeper_chasing and fish_picked_up:
@@ -139,29 +131,14 @@ def play(SCREEN):
 
         # Shopkeeper logic
         shopkeeper.update()
-        if shopkeeper_chasing:
-            # Make the shopkeeper chase the player
-            if player.rect.x < shopkeeper.rect.x:
-                shopkeeper.move(-2, 0)  # Move left
-            elif player.rect.x > shopkeeper.rect.x:
-                shopkeeper.move(2, 0)  # Move right
-        else:
-            shopkeeper.move(shopkeeper.horizontal_velocity,
-                            0)  # Move shopkeeper normally
-
-        # Ensure the shopkeeper stays within the map bounds
-        if shopkeeper.rect.left < 0:
-            shopkeeper.rect.left = 0
-        elif shopkeeper.rect.right > map_width:
-            shopkeeper.rect.right = map_width
+        handle_shopkeeper_movement(
+            shopkeeper, player, shopkeeper_chasing, map_width)
+        shopkeeper_chasing = handle_shopkeeper_chase(
+            shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 
         # Handle shopkeeper collision
         fish_picked_up, fish_position = handle_shopkeeper_collision(
             player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
-
-        # Stop the shopkeeper from chasing if the fish is dropped
-        if not fish_picked_up:
-            shopkeeper_chasing = False
 
         # Fish logic
         fish.update()
@@ -202,41 +179,13 @@ def play(SCREEN):
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
 
-        for platform in platforms:
-            platform.draw(SCREEN, camera)
-
-        for guard in Guards:
-            guard.draw(SCREEN, camera)
-        # Draw the shopkeeper
-        shopkeeper.draw(SCREEN, camera)
-
-        for spot in hiding_spot_objects:
-            spot.draw(SCREEN, camera, player.is_hidden and spot ==
-                      current_hiding_spot)
-
-        # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
-        if not fish_picked_up:
-            fish.draw(SCREEN, fish_position[0] -
-                      camera.x_offset, fish_position[1])
-            fish.rect.topleft = fish_position
-        else:
-            # Draw the "Fish picked up" message below the player
-            message_rect = message_surface.get_rect(
-                center=(player.rect.centerx - camera.x_offset, player.rect.bottom + 5))  # Adjusted y-coordinate
-            SCREEN.blit(message_surface, message_rect)
+        draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot)
 
         # Check if the player reaches the barrel with the fish
         if fish_picked_up and player.collision_rect.colliderect(barrel_rect):
             game_finish(SCREEN)  # Display the game finish screen
-
-        player.draw(SCREEN, camera)
-
-        for heart, heart_rect in health_display:
-            SCREEN.blit(heart, heart_rect)
-
-        # Draw the barrel
-        SCREEN.blit(barrel_image, (barrel_rect.x -
-                    camera.x_offset, barrel_rect.y))
+            return  # Exit the play function to stop the game loop
 
         pygame.display.flip()
         clock.tick(60)
