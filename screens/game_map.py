@@ -136,10 +136,11 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
             if (is_horizontal_reachable(dx) and
                 is_jump_reachable(dx, dy) and
                     not does_edge_intersect_wall(from_node, to_node)):
-                graph.add_edge(from_node, to_node)
+                # Comment out automatic edge creation
+                # graph.add_edge(from_node, to_node)
+                pass
 
-    remove_edge(graph, (2600, 850), (2400, 850))
-
+    # Manually add edges
     add_edge(graph, (3000, 390), (3400, 390))
     add_edge(graph, (2150, 580), (1350, 580))
     add_edge(graph, (1100, 450), (700, 450))
@@ -149,5 +150,33 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
     add_edge(graph, (2230, 150), (3430, 150))
     add_edge(graph, (3350, 560), (3400, 390))
     add_edge(graph, (2900, 650), (3500, 650))
+
+    add_edge(graph, (0, 850), (200, 850))
+    add_edge(graph, (200, 850), (400, 850))
+    add_edge(graph, (400, 850), (600, 850))
+    add_edge(graph, (600, 850), (800, 850))
+    add_edge(graph, (1000, 850), (1200, 850))
+    add_edge(graph, (1200, 850), (1400, 850))
+    add_edge(graph, (1400, 850), (1800, 850))
+    add_edge(graph, (1800, 850), (2000, 850))
+    add_edge(graph, (2000, 850), (2200, 770))
+    add_edge(graph, (2200, 770), (2200, 710))
+    add_edge(graph, (2200, 710), (2150, 580))
+    add_edge(graph, (1350, 580), (1200, 500))
+    add_edge(graph, (1200, 500), (1100, 450))
+    add_edge(graph, (1500, 300), (1600, 220))
+    add_edge(graph, (1600, 220), (1900, 220))
+    add_edge(graph, (1900, 220), (2100, 220))
+    add_edge(graph, (2100, 220), (2230, 150))
+    add_edge(graph, (3430, 150), (3500, 300))
+    add_edge(graph, (3500, 300), (3400, 390))
+    add_edge(graph, (3350, 560), (3500, 650))
+    add_edge(graph, (3600, 750), (3500, 650))
+    add_edge(graph, (2600, 850), (2800, 850))
+    add_edge(graph, (2800, 850), (3000, 850))
+    add_edge(graph, (3000, 850), (3200, 850))
+    add_edge(graph, (3200, 850), (3400, 850))
+    add_edge(graph, (3400, 850), (3600, 850))
+    add_edge(graph, (800, 850), (1000, 850))
 
     return graph
