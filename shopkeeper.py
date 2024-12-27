@@ -27,7 +27,7 @@ class Shopkeeper():
         self.is_moving = False
         self.horizontal_velocity = 1  # Initial horizontal velocity
         self.collision_rect = self.rect.inflate(
-            -self.rect.width * 0.5, -self.rect.height * 0.5)
+            -self.rect.width * 0.5, -self.rect.height * 0.0001)
         self.is_jumping = False
         self.jump_velocity = -20
         self.gravity = 1.2

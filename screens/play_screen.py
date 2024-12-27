@@ -35,7 +35,7 @@ def play(SCREEN):
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
         frame_width=48,
         frame_height=48,
-        scale=3,
+        scale=1,
         ground_level=ground
     )
     shopkeeper.rect.topleft = (
@@ -103,6 +103,10 @@ def play(SCREEN):
 
                     fish_picked_up, fish_position, last_fish_action_time = handle_fish_pickup(
                         player, fish, fish_picked_up, fish_position, last_fish_action_time, fish_cooldown)
+                if event.key == pygame.K_y:
+                    # start chasing the player
+                    shopkeeper_chasing = True
+                    fish_picked_up = True
 
         keys = pygame.key.get_pressed()
 
@@ -128,13 +132,13 @@ def play(SCREEN):
             health_display, player.health))
 
         # Check if the player picks up the fish
-        if not shopkeeper_chasing and fish_picked_up:
-            shopkeeper_chasing = True  # Start chasing the player
+        # if not shopkeeper_chasing and fish_picked_up:
+        #     shopkeeper_chasing = True  # Start chasing the player
 
         # Shopkeeper logic
         shopkeeper.update()
         handle_shopkeeper_movement(
-            shopkeeper, player, shopkeeper_chasing, map_width)
+            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph.nodes)
         shopkeeper_chasing = handle_shopkeeper_chase(
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 
