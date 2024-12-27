@@ -1,6 +1,7 @@
-from map import GameMap, Platform
+from map import *
 from guard import Guard
 from hiding_spot import HidingSpot
+from shopkeeper import Shopkeeper
 
 
 def create_game_map():
@@ -69,3 +70,53 @@ def create_hiding_spots(platforms):
                    platforms[index].rect.y - 50, 50, 50, scale)
         for index, offset, scale in hiding_spots
     ]
+
+
+def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump_height=185, jump_decay=0.5):
+    graph = Graph()
+
+    # Add ground nodes
+    for x in range(0, map_width, 200):
+        graph.add_node(x, ground_level)
+
+    # Add platform nodes
+    for platform in platforms:
+        graph.add_node(platform.rect.left, platform.rect.top)
+        graph.add_node(platform.rect.right, platform.rect.top)
+
+    def is_horizontal_reachable(dx):
+        """Check if the horizontal distance is within reachable range."""
+        return abs(dx) <= 300
+
+    def is_jump_reachable(dx, dy):
+        """Check if the vertical distance is reachable based on jumping."""
+        if dy < 0:  # Upward jump
+            reduced_jump_height = max_jump_height - abs(dx) * jump_decay
+            return abs(dy) <= max(reduced_jump_height, 0)
+        elif dy > 0:  # Downward movement
+            return dy <= max_fall_distance
+        return True
+
+    def does_edge_intersect_wall(from_node, to_node):
+        """Check if the edge intersects any wall."""
+        for wall in walls:
+            if wall.rect.clipline(from_node, to_node):
+                return True
+        return False
+
+    # Calculate edges based on jump capability
+    for from_node in graph.nodes:
+        for to_node in graph.nodes:
+            if from_node == to_node:
+                continue
+
+            dx = to_node[0] - from_node[0]
+            dy = to_node[1] - from_node[1]
+
+            # Perform all checks
+            if (is_horizontal_reachable(dx) and
+                is_jump_reachable(dx, dy) and
+                    not does_edge_intersect_wall(from_node, to_node)):
+                graph.add_edge(from_node, to_node)
+
+    return graph

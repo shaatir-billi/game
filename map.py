@@ -1,5 +1,6 @@
 import pygame
 import math
+import heapq
 from utils.globals import SCREEN_WIDTH, SCREEN_HEIGHT, map_width
 
 
@@ -70,3 +71,64 @@ class Platform:
         :param camera: Camera object
         """
         screen.blit(self.image, (self.rect.x - camera.x_offset, self.rect.y))
+
+
+class Graph:
+    def __init__(self):
+        self.nodes = []
+        self.edges = {}
+
+    def add_node(self, x, y):
+        self.nodes.append((x, y))
+        self.edges[(x, y)] = []
+
+    def add_edge(self, from_node, to_node):
+        self.edges[from_node].append(to_node)
+
+    def heuristic(self, node, goal):
+        return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+    def a_star_search(self, start, goal):
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {node: float('inf') for node in self.nodes}
+        g_score[start] = 0
+        f_score = {node: float('inf') for node in self.nodes}
+        f_score[start] = self.heuristic(start, goal)
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                path = []
+                while current in came_from:
+                    path.append(current)
+                    current = came_from[current]
+                path.append(start)
+                path.reverse()
+                return path
+
+            for neighbor in self.edges[current]:
+                tentative_g_score = g_score[current] + \
+                    self.heuristic(current, neighbor)
+                if tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = g_score[neighbor] + \
+                        self.heuristic(neighbor, goal)
+                    if neighbor not in [i[1] for i in open_set]:
+                        heapq.heappush(open_set, (f_score[neighbor], neighbor))
+
+        return []
+
+    def draw(self, screen, camera):
+        for node in self.nodes:
+            pygame.draw.circle(screen, (0, 255, 0),
+                               (node[0] - camera.x_offset, node[1]), 5)
+        for from_node, to_nodes in self.edges.items():
+            for to_node in to_nodes:
+                color = (255, 0, 0) if to_node[1] < from_node[1] else (
+                    0, 0, 255)  # Red for upward, Blue for downward
+                pygame.draw.line(screen, color, (
+                    from_node[0] - camera.x_offset, from_node[1]), (to_node[0] - camera.x_offset, to_node[1]), 2)

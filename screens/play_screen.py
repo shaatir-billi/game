@@ -85,6 +85,8 @@ def play(SCREEN):
 
     shopkeeper_chasing = False  # Flag to indicate if the shopkeeper is chasing the player
 
+    graph = create_graph(platforms, ground, Walls)
+
     while True:
         SCREEN.fill("black")
 
@@ -167,6 +169,17 @@ def play(SCREEN):
                 on_platform = True
                 break
 
+        for wall in Walls:
+            if player.rect.colliderect(wall.rect):
+                overlap_left = wall.rect.right - player.rect.left
+                overlap_right = player.rect.right - wall.rect.left
+                # check if player is on the left side of the wall
+                if abs(overlap_left) < abs(overlap_right):
+                    player.rect.left = wall.rect.right
+                # check if player is on the right side of the wall
+                else:
+                    player.rect.right = wall.rect.left
+
         # If the player is not on any platform, apply gravity
         if not on_platform and player.rect.bottom < game_map.ground_level:
             player.is_jumping = True
@@ -180,7 +193,10 @@ def play(SCREEN):
         game_map.draw(SCREEN, camera)
 
         draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
-                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot)
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls)
+
+        if ENABLE_GRAPH_VISUALIZATION:
+            graph.draw(SCREEN, camera)
 
         # Check if the player reaches the barrel with the fish
         if fish_picked_up and player.collision_rect.colliderect(barrel_rect):

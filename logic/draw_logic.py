@@ -1,7 +1,7 @@
 import pygame
 
 
-def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up, fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot):
+def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up, fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls):
     for platform in platforms:
         platform.draw(SCREEN, camera)
 
@@ -9,6 +9,9 @@ def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, 
         guard.draw(SCREEN, camera)
 
     shopkeeper.draw(SCREEN, camera)
+
+    for wall in Walls:
+        wall.draw(SCREEN, camera)
 
     for spot in hiding_spot_objects:
         spot.draw(SCREEN, camera, player.is_hidden and spot ==

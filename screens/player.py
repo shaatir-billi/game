@@ -32,5 +32,8 @@ def handle_player_logic(player, keys):
     if keys[pygame.K_w]:
         player.jump()
 
+    if keys[pygame.K_u]:
+        print("Current coordinates:", player.rect.x, player.rect.y)
+
     # Move player horizontally and apply gravity for vertical movement
     player.move(player.horizontal_velocity, 0)
