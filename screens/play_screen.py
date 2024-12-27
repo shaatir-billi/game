@@ -138,7 +138,7 @@ def play(SCREEN):
         # Shopkeeper logic
         shopkeeper.update()
         handle_shopkeeper_movement(
-            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph.nodes)
+            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph)
         shopkeeper_chasing = handle_shopkeeper_chase(
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 

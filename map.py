@@ -123,9 +123,15 @@ class Graph:
         return []
 
     def draw(self, screen, camera):
+        font = pygame.font.Font(None, 24)  # Font for the coordinates
         for node in self.nodes:
             pygame.draw.circle(screen, (0, 255, 0),
                                (node[0] - camera.x_offset, node[1]), 5)
+            # Render the coordinates text
+            text_surface = font.render(
+                f"{node}", True, (0, 0, 0))  # Black color
+            screen.blit(
+                text_surface, (node[0] - camera.x_offset, node[1] - 20))
         for from_node, to_nodes in self.edges.items():
             for to_node in to_nodes:
                 color = (255, 0, 0) if to_node[1] < from_node[1] else (
