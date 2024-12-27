@@ -97,8 +97,14 @@ class Graph:
         f_score = {node: float('inf') for node in self.nodes}
         f_score[start] = self.heuristic(start, goal)
 
+        iteration = 0  # Add iteration counter
+
         while open_set:
+            iteration += 1  # Increment iteration counter
             _, current = heapq.heappop(open_set)
+
+            # Print current node
+            print(f"Iteration {iteration}: Current node: {current}")
 
             if current == goal:
                 path = []
