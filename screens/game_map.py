@@ -104,6 +104,25 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
                 return True
         return False
 
+    def add_edge(graph, from_node, to_node):
+        """Add an edge between two nodes in the graph."""
+        if from_node in graph.edges:
+            graph.edges[from_node].append(to_node)
+        else:
+            graph.edges[from_node] = [to_node]
+
+        if to_node in graph.edges:
+            graph.edges[to_node].append(from_node)
+        else:
+            graph.edges[to_node] = [from_node]
+
+    def remove_edge(graph, from_node, to_node):
+        """Remove an edge between two nodes in the graph."""
+        if from_node in graph.edges and to_node in graph.edges[from_node]:
+            graph.edges[from_node].remove(to_node)
+        if to_node in graph.edges and from_node in graph.edges[to_node]:
+            graph.edges[to_node].remove(from_node)
+
     # Calculate edges based on jump capability
     for from_node in graph.nodes:
         for to_node in graph.nodes:
@@ -118,5 +137,17 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
                 is_jump_reachable(dx, dy) and
                     not does_edge_intersect_wall(from_node, to_node)):
                 graph.add_edge(from_node, to_node)
+
+    remove_edge(graph, (2600, 850), (2400, 850))
+
+    add_edge(graph, (3000, 390), (3400, 390))
+    add_edge(graph, (2150, 580), (1350, 580))
+    add_edge(graph, (1100, 450), (700, 450))
+    add_edge(graph, (1100, 450), (1000, 300))
+    add_edge(graph, (1000, 300), (1500, 300))
+    add_edge(graph, (900, 210), (0, 210))
+    add_edge(graph, (2230, 150), (3430, 150))
+    add_edge(graph, (3350, 560), (3400, 390))
+    add_edge(graph, (2900, 650), (3500, 650))
 
     return graph
