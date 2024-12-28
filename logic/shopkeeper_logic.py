@@ -5,6 +5,8 @@ import math
 def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph):
     if not hasattr(shopkeeper, "current_path"):
         shopkeeper.current_path = []  # Initialize the path if not already present
+    if not hasattr(shopkeeper, "last_path_update"):
+        shopkeeper.last_path_update = pygame.time.get_ticks()  # Initialize the timer
 
     if shopkeeper_chasing:
         nodes = graph.nodes
@@ -12,13 +14,17 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         def manhattan_distance(node1, node2):
             return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
 
+        # Get the current time
+        current_time = pygame.time.get_ticks()
+
         shopkeeper_center = (shopkeeper.rect.centerx, shopkeeper.rect.centery)
         player_center = (player.rect.centerx, player.rect.centery)
 
         # Recalculate path only if current path is empty or target has moved
-        # if not shopkeeper.current_path or \
-        #    manhattan_distance(shopkeeper.current_path[-1], player_center) > 50:
-        if not shopkeeper.current_path:
+        if not shopkeeper.current_path or \
+           current_time - shopkeeper.last_path_update > 10000:  # Update path every 10 seconds
+            shopkeeper.last_path_update = current_time  # Update the timer
+            # if not shopkeeper.current_path:
             closest_node = min(
                 nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
             closest_node_to_player = min(
