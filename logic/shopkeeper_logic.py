@@ -1,4 +1,5 @@
 import pygame
+import math
 
 
 def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph):
@@ -10,13 +11,20 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         # elif player.rect.x > shopkeeper.rect.x:
         #     shopkeeper.move(2, 0)  # Move right
         # calculate the closest node
-        closest_node = None
 
-        for node in nodes:
-            if closest_node is None:
-                closest_node = node
-            elif abs(node[0] - shopkeeper.rect.x) < abs(closest_node[0] - shopkeeper.rect.x):
-                closest_node = node
+        def euclidean_distance(node1, node2):
+            return math.sqrt((node1[0] - node2[0]) ** 2 + (node1[1] - node2[1]) ** 2)
+
+        closest_node = min(nodes, key=lambda node: euclidean_distance(
+            node, (shopkeeper.rect.x, shopkeeper.rect.y)))
+
+        # closest_node = None
+
+        # for node in nodes:
+        #     if closest_node is None:
+        #         closest_node = node
+        #     elif abs(node[0] - shopkeeper.rect.x) < abs(closest_node[0] - shopkeeper.rect.x):
+        #         closest_node = node
 
         # go to the closest node
         if shopkeeper.rect.x < closest_node[0]:
@@ -25,13 +33,17 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
             shopkeeper.move(-2, 0)
 
         # calculate the closest node to the player
-        closest_node_to_player = None
 
-        for node in nodes:
-            if closest_node_to_player is None:
-                closest_node_to_player = node
-            elif abs(node[0] - player.rect.x) < abs(closest_node_to_player[0] - player.rect.x):
-                closest_node_to_player = node
+        closest_node_to_player = min(nodes, key=lambda node: euclidean_distance(
+            node, (player.rect.x, player.rect.y)))
+
+        # closest_node_to_player = None
+
+        # for node in nodes:
+        #     if closest_node_to_player is None:
+        #         closest_node_to_player = node
+        #     elif abs(node[0] - player.rect.x) < abs(closest_node_to_player[0] - player.rect.x):
+        #         closest_node_to_player = node
 
         # calculate a path to player node to shopkeeper node using A* algorithm
         path = graph.a_star_search(closest_node, closest_node_to_player)

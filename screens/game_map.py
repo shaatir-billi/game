@@ -137,7 +137,7 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
                 is_jump_reachable(dx, dy) and
                     not does_edge_intersect_wall(from_node, to_node)):
                 # Comment out automatic edge creation
-                # graph.add_edge(from_node, to_node)
+                graph.add_edge(from_node, to_node)
                 pass
 
     # Manually add edges
