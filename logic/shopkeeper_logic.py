@@ -35,10 +35,23 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                 shopkeeper.move(2, 0)
             elif shopkeeper.rect.x > next_node[0]:
                 shopkeeper.move(-2, 0)
-            if shopkeeper.rect.y < next_node[1]:
+
+            # check for vertical movement, with some lee-way
+            if shopkeeper.rect.centery < next_node[1] - 10:
+                print("moving down")
+                print("shopkeeper rect y:", shopkeeper.rect.centery)
+                print("next node y:", next_node[1])
                 shopkeeper.move(0, 2)
-            elif shopkeeper.rect.y > next_node[1]:
+            elif shopkeeper.rect.centery > next_node[1] + 10:
+                print("moving up")
+                print("shopkeeper rect y:", shopkeeper.rect.centery)
+                print("next node y:", next_node[1])
                 shopkeeper.move(0, -2)
+
+            # if shopkeeper.rect.y  < next_node[1]:
+            #     shopkeeper.move(0, 2)
+            # elif shopkeeper.rect.y > next_node[1]:
+            #     shopkeeper.move(0, -2)
     else:
         if shopkeeper.rect.right >= 2600 and shopkeeper.rect.right < 3000 and shopkeeper.moving_right:
             shopkeeper.move(2, 0)

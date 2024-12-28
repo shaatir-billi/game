@@ -125,16 +125,18 @@ class Graph:
     def draw(self, screen, camera):
         font = pygame.font.Font(None, 24)  # Font for the coordinates
         for node in self.nodes:
+            adjusted_node = (node[0], node[1] + 100)  # Shift node back by +100
             pygame.draw.circle(screen, (0, 255, 0),
-                               (node[0] - camera.x_offset, node[1]), 5)
-            # Render the coordinates text
+                               (adjusted_node[0] - camera.x_offset, adjusted_node[1]), 5)
             text_surface = font.render(
-                f"{node}", True, (0, 0, 0))  # Black color
+                f"{adjusted_node}", True, (0, 0, 0))  # Black color
             screen.blit(
-                text_surface, (node[0] - camera.x_offset, node[1] - 20))
+                text_surface, (adjusted_node[0] - camera.x_offset, adjusted_node[1] - 20))
         for from_node, to_nodes in self.edges.items():
             for to_node in to_nodes:
-                color = (255, 0, 0) if to_node[1] < from_node[1] else (
+                adjusted_from_node = (from_node[0], from_node[1] + 100)
+                adjusted_to_node = (to_node[0], to_node[1] + 100)
+                color = (255, 0, 0) if adjusted_to_node[1] < adjusted_from_node[1] else (
                     0, 0, 255)  # Red for upward, Blue for downward
                 pygame.draw.line(screen, color, (
-                    from_node[0] - camera.x_offset, from_node[1]), (to_node[0] - camera.x_offset, to_node[1]), 2)
+                    adjusted_from_node[0] - camera.x_offset, adjusted_from_node[1]), (adjusted_to_node[0] - camera.x_offset, adjusted_to_node[1]), 2)
