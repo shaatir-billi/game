@@ -83,6 +83,8 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
     for platform in platforms:
         graph.add_node(platform.rect.left, platform.rect.top)
         graph.add_node(platform.rect.right, platform.rect.top)
+        middle_x = (platform.rect.left + platform.rect.right) // 2
+        graph.add_node(middle_x, platform.rect.top)
 
     def is_horizontal_reachable(dx):
         """Check if the horizontal distance is within reachable range."""
@@ -140,6 +142,10 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
                 graph.add_edge(from_node, to_node)
                 pass
 
+    remove_edge(graph, (2400, 850), (2600, 850))
+    remove_edge(graph, (1125, 650), (1350, 580))
+    remove_edge(graph, (2400, 600), (2150, 580))
+
     # Manually add edges
     add_edge(graph, (3000, 390), (3400, 390))
     add_edge(graph, (2150, 580), (1350, 580))
@@ -178,5 +184,6 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
     add_edge(graph, (3200, 850), (3400, 850))
     add_edge(graph, (3400, 850), (3600, 850))
     add_edge(graph, (800, 850), (1000, 850))
+    add_edge(graph, (2830, 150), (3430, 150))
 
     return graph
