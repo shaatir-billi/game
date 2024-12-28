@@ -128,8 +128,9 @@ class Graph:
             adjusted_node = (node[0], node[1] + 100)  # Shift node back by +100
             pygame.draw.circle(screen, (0, 255, 0),
                                (adjusted_node[0] - camera.x_offset, adjusted_node[1]), 5)
+            original_node = (node[0], node[1])
             text_surface = font.render(
-                f"{adjusted_node}", True, (0, 0, 0))  # Black color
+                f"{original_node}", True, (0, 0, 0))  # Black color
             screen.blit(
                 text_surface, (adjusted_node[0] - camera.x_offset, adjusted_node[1] - 20))
         for from_node, to_nodes in self.edges.items():

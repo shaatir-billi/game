@@ -9,23 +9,20 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
     if shopkeeper_chasing:
         nodes = graph.nodes
 
-        def weighted_manhattan_distance(node1, node2):
-            dx = abs(node1[0] - node2[0])
-            dy = abs(node1[1] - node2[1])
-            # Apply weight if the node is higher
-            weight = 2 if node2[1] < node1[1] else 1
-            return dx + weight * dy
+        def manhattan_distance(node1, node2):
+            return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
 
         shopkeeper_center = (shopkeeper.rect.centerx, shopkeeper.rect.centery)
         player_center = (player.rect.centerx, player.rect.centery)
 
         # Recalculate path only if current path is empty or target has moved
-        if not shopkeeper.current_path or \
-           weighted_manhattan_distance(shopkeeper.current_path[-1], player_center) > 50:
+        # if not shopkeeper.current_path or \
+        #    manhattan_distance(shopkeeper.current_path[-1], player_center) > 50:
+        if not shopkeeper.current_path:
             closest_node = min(
-                nodes, key=lambda node: weighted_manhattan_distance(node, shopkeeper_center))
+                nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
             closest_node_to_player = min(
-                nodes, key=lambda node: weighted_manhattan_distance(node, player_center))
+                nodes, key=lambda node: manhattan_distance(node, player_center))
 
             print("Closest node to shopkeeper:", closest_node)
             shopkeeper.current_path = graph.a_star_search(
@@ -37,7 +34,7 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
             print("Shopkeeper moving to node:", next_node)
 
             # Define a tolerance value
-            TOLERANCE = 2
+            TOLERANCE = 5
 
             # Calculate the differences
             dx = next_node[0] - shopkeeper.rect.centerx
@@ -48,16 +45,21 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                 print("Reached node:", next_node)
                 shopkeeper.current_path.pop(0)  # Move to the next node
             else:
+                print("abs(dx):", abs(dx), "abs(dy):", abs(dy))
                 # Move horizontally or vertically toward the next node
                 if abs(dx) > TOLERANCE:  # Horizontal movement
                     if dx > 0:  # Move right
-                        shopkeeper.move(1, 0)
+                        print("Moving right")
+                        shopkeeper.move(2, 0)
                     else:  # Move left
-                        shopkeeper.move(-1, 0)
+                        print("Moving left")
+                        shopkeeper.move(-2, 0)
                 elif abs(dy) > TOLERANCE:  # Vertical movement
                     if dy > 0:  # Move down
+                        print("Moving down")
                         shopkeeper.move(0, 2)
                     else:  # Move up
+                        print("Moving up")
                         shopkeeper.move(0, -2)
     else:
         if shopkeeper.rect.right >= 2600 and shopkeeper.rect.right < 3000 and shopkeeper.moving_right:

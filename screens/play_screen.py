@@ -143,32 +143,32 @@ def play(SCREEN):
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 
         # Handle shopkeeper collision with platforms
-        on_platform = False
-        for platform in platforms:
-            if (
-                shopkeeper.rect.colliderect(platform.rect)
-                and shopkeeper.y_velocity >= 0
-                and shopkeeper.rect.bottom <= platform.rect.top + 20
-                and platform.rect.left <= shopkeeper.rect.centerx <= platform.rect.right
-            ):
-                shopkeeper.rect.bottom = platform.rect.top
-                shopkeeper.is_jumping = False
-                shopkeeper.y_velocity = 0
-                on_platform = True
-                break
+        # on_platform = False
+        # for platform in platforms:
+        #     if (
+        #         shopkeeper.rect.colliderect(platform.rect)
+        #         and shopkeeper.y_velocity >= 0
+        #         and shopkeeper.rect.bottom <= platform.rect.top + 20
+        #         and platform.rect.left <= shopkeeper.rect.centerx <= platform.rect.right
+        #     ):
+        #         shopkeeper.rect.bottom = platform.rect.top
+        #         shopkeeper.is_jumping = False
+        #         shopkeeper.y_velocity = 0
+        #         on_platform = True
+        #         break
 
-        if not on_platform and shopkeeper.rect.bottom < game_map.ground_level:
-            shopkeeper.is_jumping = True
+        # if not on_platform and shopkeeper.rect.bottom < game_map.ground_level:
+        #     shopkeeper.is_jumping = True
 
-        # Handle shopkeeper collision with walls
-        for wall in Walls:
-            if shopkeeper.rect.colliderect(wall.rect):
-                overlap_left = wall.rect.right - shopkeeper.rect.left
-                overlap_right = shopkeeper.rect.right - wall.rect.left
-                if abs(overlap_left) < abs(overlap_right):
-                    shopkeeper.rect.left = wall.rect.right
-                else:
-                    shopkeeper.rect.right = wall.rect.left
+        # # Handle shopkeeper collision with walls
+        # for wall in Walls:
+        #     if shopkeeper.rect.colliderect(wall.rect):
+        #         overlap_left = wall.rect.right - shopkeeper.rect.left
+        #         overlap_right = shopkeeper.rect.right - wall.rect.left
+        #         if abs(overlap_left) < abs(overlap_right):
+        #             shopkeeper.rect.left = wall.rect.right
+        #         else:
+        #             shopkeeper.rect.right = wall.rect.left
 
         # Handle shopkeeper collision
         fish_picked_up, fish_position = handle_shopkeeper_collision(
