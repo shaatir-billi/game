@@ -229,15 +229,10 @@ def play(SCREEN):
 
         if ENABLE_GRAPH_VISUALIZATION:
             graph.draw(SCREEN, camera)
-            print("Player rect topleft", shopkeeper.rect.topleft)
-            print("Player rect bottom", shopkeeper.rect.bottom)
-            print("Player rect x", shopkeeper.rect.x)
-            print("Player rect y", shopkeeper.rect.y)
-
         # Check if the player reaches the barrel with the fish
         if fish_picked_up and player.collision_rect.colliderect(barrel_rect):
             game_finish(SCREEN)  # Display the game finish screen
             return  # Exit the play function to stop the game loop
 
         pygame.display.flip()
-        clock.tick(500)
+        clock.tick(100)
