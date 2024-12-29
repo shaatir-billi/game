@@ -51,7 +51,7 @@ def play(SCREEN):
         scale=0.5  # Adjust scale to make fish smaller
     )
 
-    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2),
+    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2) + 450,
                               ground - fish.rect.height - 20)
 
     fish_picked_up = False
@@ -132,8 +132,8 @@ def play(SCREEN):
             health_display, player.health))
 
         # Check if the player picks up the fish
-        # if not shopkeeper_chasing and fish_picked_up:
-        #     shopkeeper_chasing = True  # Start chasing the player
+        if not shopkeeper_chasing and fish_picked_up:
+            shopkeeper_chasing = True  # Start chasing the player
 
         # Shopkeeper logic
         shopkeeper.update()

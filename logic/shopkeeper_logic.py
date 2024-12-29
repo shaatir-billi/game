@@ -22,7 +22,7 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
 
         # Recalculate path only if current path is empty or target has moved
         if not shopkeeper.current_path or \
-           current_time - shopkeeper.last_path_update > 10000:  # Update path every 10 seconds
+           current_time - shopkeeper.last_path_update > 5000:  # Update path every 10 seconds
             shopkeeper.last_path_update = current_time  # Update the timer
             # if not shopkeeper.current_path:
             closest_node = min(
@@ -68,8 +68,15 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                         print("Moving up")
                         shopkeeper.move(0, -2)
     else:
-        if shopkeeper.rect.right >= 2600 and shopkeeper.rect.right < 3000 and shopkeeper.moving_right:
+        # Make the shopkeeper patrol
+        if shopkeeper.rect.right >= 2800 and shopkeeper.rect.right < 4000 and shopkeeper.moving_right:
             shopkeeper.move(2, 0)
+            if shopkeeper.rect.right >= 4000:
+                shopkeeper.moving_right = False
+        elif shopkeeper.rect.right <= 4000 and not shopkeeper.moving_right:
+            shopkeeper.move(-2, 0)
+            if shopkeeper.rect.right <= 2800:
+                shopkeeper.moving_right = True
 
     if shopkeeper.rect.left < 0:
         shopkeeper.rect.left = 0
