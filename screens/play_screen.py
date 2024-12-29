@@ -16,6 +16,7 @@ from logic.draw_logic import draw_game_elements  # Corrected import statement
 from logic.marl_env import MAP_WIDTH, CatChaseEnv  # Import the MARL environment
 import math
 
+
 def play(SCREEN):
     game_map = create_game_map()
     camera = Camera((SCREEN_WIDTH, SCREEN_HEIGHT), map_width)
@@ -49,7 +50,7 @@ def play(SCREEN):
         scale=0.5
     )
 
-    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2),
+    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2) + 450,
                               ground - fish.rect.height - 20)
 
     fish_picked_up = False
@@ -129,18 +130,21 @@ def play(SCREEN):
 
         # Print shopkeeper speed
         print(f"Shopkeeper speed: {shopkeeper_speed}")
-
         # Calculate and print distance to cart
         cart_position = (player.rect.x, player.rect.y)
         shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
-        distance_to_cart = math.sqrt((shopkeeper_position[0] - cart_position[0]) ** 2 + (shopkeeper_position[1] - cart_position[1]) ** 2)
+        distance_to_cart = math.sqrt((shopkeeper_position[0] - cart_position[0]) ** 2 + (
+            shopkeeper_position[1] - cart_position[1]) ** 2)
         print(f"Distance to car: {distance_to_cart}")
+        # Check if the player picks up the fish
+        if not shopkeeper_chasing and fish_picked_up:
+            shopkeeper_chasing = True  # Start chasing the player
 
         # Now update the shopkeeper based on this speed
         shopkeeper.update()
         handle_shopkeeper_movement(
-            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph
-        )
+
+            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot)
 
         shopkeeper_chasing = handle_shopkeeper_chase(
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
@@ -148,7 +152,8 @@ def play(SCREEN):
         for guard in Guards:
             guard.update()
             guard.move(guard.horizontal_velocity * shopkeeper_speed, 0)
-            print(f"Guard position: {guard.rect.topleft}, Speed: {guard.horizontal_velocity * shopkeeper_speed}")
+            print(
+                f"Guard position: {guard.rect.topleft}, Speed: {guard.horizontal_velocity * shopkeeper_speed}")
 
             if guard.rect.right >= guard.platform_rect.right - 30:
                 guard.rect.right = guard.platform_rect.right - 100
@@ -210,7 +215,8 @@ def play(SCREEN):
 
         # Step forward in the MARL environment
         obs, reward, done, info = marl_env.step(actions)
-        print(f"Step output: Observation: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+        print(
+            f"Step output: Observation: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
 
         print(f"Shopkeeper position: {shopkeeper.rect.topleft}")
         for i, guard in enumerate(Guards):
@@ -218,7 +224,6 @@ def play(SCREEN):
 
         pygame.display.flip()
         clock.tick(60)
-
 # import pygame
 # import sys
 # from camera import Camera
