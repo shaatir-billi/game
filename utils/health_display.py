@@ -4,7 +4,8 @@ import pygame
 def create_health_display(health):
     health_display = []
     for i in range(health):
-        heart = pygame.image.load('assets/menu/Grass1.png').convert_alpha()
+        heart = pygame.image.load(
+            'assets/menu/heart_32x32.png').convert_alpha()
         heart_rect = heart.get_rect(topleft=(20 + i * 30, 20))
         health_display.append((heart, heart_rect))
     return health_display
