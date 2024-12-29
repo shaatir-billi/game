@@ -2,7 +2,7 @@ import pygame
 import math
 
 
-def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph):
+def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot):
     if not hasattr(shopkeeper, "current_path"):
         shopkeeper.current_path = []  # Initialize the path if not already present
     if not hasattr(shopkeeper, "last_path_update"):
@@ -20,22 +20,30 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         shopkeeper_center = (shopkeeper.rect.centerx, shopkeeper.rect.centery)
         player_center = (player.rect.centerx, player.rect.centery)
 
-        closest_node = min(
-            nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
-        closest_node_to_player = min(
-            nodes, key=lambda node: manhattan_distance(node, player_center))
+        if current_hiding_spot:
+            # Move to the nearest node and stop
+            closest_node_to_hiding_spot = min(
+                nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
+            shopkeeper.current_path = [
+                shopkeeper_center, closest_node_to_hiding_spot]
+            shopkeeper_chasing = False  # Stop chasing when player is hidden
+        else:
+            closest_node = min(
+                nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
+            closest_node_to_player = min(
+                nodes, key=lambda node: manhattan_distance(node, player_center))
 
-        # if closest node has (50) in the y axis, then update the path after 10 seconds, else update the path after 1 seconds
-        path_update_time = 10000 if closest_node[1] == 50 else 5000
+            # if closest node has (50) in the y axis, then update the path after 10 seconds, else update the path after 1 seconds
+            path_update_time = 10000 if closest_node[1] == 50 else 5000
 
-        # Recalculate path only if current path is empty or target has moved
-        if not shopkeeper.current_path or \
-           current_time - shopkeeper.last_path_update > path_update_time:
-            shopkeeper.last_path_update = current_time  # Update the timer
+            # Recalculate path only if current path is empty or target has moved
+            if not shopkeeper.current_path or \
+               current_time - shopkeeper.last_path_update > path_update_time:
+                shopkeeper.last_path_update = current_time  # Update the timer
 
-            shopkeeper.current_path = graph.a_star_search(
-                closest_node, closest_node_to_player)
-            print("Path:", shopkeeper.current_path)
+                shopkeeper.current_path = graph.a_star_search(
+                    closest_node, closest_node_to_player)
+                print("Path:", shopkeeper.current_path)
 
         if shopkeeper.current_path and len(shopkeeper.current_path) > 1:
             next_node = shopkeeper.current_path[1]
