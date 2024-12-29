@@ -1,7 +1,7 @@
 import pygame
 
 
-def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up, fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls):
+def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up, fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls, player_health):
     for platform in platforms:
         platform.draw(SCREEN, camera)
 
@@ -29,5 +29,11 @@ def draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, 
 
     for heart, heart_rect in health_display:
         SCREEN.blit(heart, heart_rect)
+
+    font = pygame.font.Font("assets/fonts/main.ttf", 20)
+    lives_text = font.render(
+        f"{player_health} lives left", True, (0, 0, 0))
+    lives_rect = lives_text.get_rect(topleft=(20, 60))
+    SCREEN.blit(lives_text, lives_rect)
 
     SCREEN.blit(barrel_image, (barrel_rect.x - camera.x_offset, barrel_rect.y))

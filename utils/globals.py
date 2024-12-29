@@ -9,4 +9,4 @@ map_width = 4000
 sky_image_path = "assets/map/sky.jpeg"  # Background image path
 
 # Option to enable or disable graph visualization
-ENABLE_GRAPH_VISUALIZATION = True
+ENABLE_GRAPH_VISUALIZATION = False

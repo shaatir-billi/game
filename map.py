@@ -29,6 +29,18 @@ class GameMap:
 
         self.ground_tile_height = 50  # Height of the ground tile
         self.ground_level = SCREEN_HEIGHT - self.ground_tile_height  # Ground level
+        self.background_layers = []
+
+    def add_background_layer(self, image_path, scale):
+        """
+        Add an additional background layer.
+        :param image_path: Path to the background image
+        :param scale: Scale factor for the background layer
+        """
+        image = pygame.image.load(image_path).convert_alpha()
+        image = pygame.transform.scale(
+            image, (int(image.get_width() * scale), int(image.get_height() * scale)))
+        self.background_layers.append(image)
 
     def draw(self, screen, camera):
         """
@@ -48,6 +60,10 @@ class GameMap:
         for x in range(0, tiles_upper):
             screen.blit(self.upper_layer_image,
                         ((x * self.upper_layer_width) - camera.x_offset, 0))
+
+        # Draw additional background layers
+        for layer in self.background_layers:
+            screen.blit(layer, (0 - camera.x_offset, 0))
 
 
 class Platform:
