@@ -20,17 +20,19 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         shopkeeper_center = (shopkeeper.rect.centerx, shopkeeper.rect.centery)
         player_center = (player.rect.centerx, player.rect.centery)
 
+        closest_node = min(
+            nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
+        closest_node_to_player = min(
+            nodes, key=lambda node: manhattan_distance(node, player_center))
+
+        # if closest node has (50) in the y axis, then update the path after 10 seconds, else update the path after 1 seconds
+        path_update_time = 10000 if closest_node[1] == 50 else 5000
+
         # Recalculate path only if current path is empty or target has moved
         if not shopkeeper.current_path or \
-           current_time - shopkeeper.last_path_update > 5000:  # Update path every 10 seconds
+           current_time - shopkeeper.last_path_update > path_update_time:
             shopkeeper.last_path_update = current_time  # Update the timer
-            # if not shopkeeper.current_path:
-            closest_node = min(
-                nodes, key=lambda node: manhattan_distance(node, shopkeeper_center))
-            closest_node_to_player = min(
-                nodes, key=lambda node: manhattan_distance(node, player_center))
 
-            print("Closest node to shopkeeper:", closest_node)
             shopkeeper.current_path = graph.a_star_search(
                 closest_node, closest_node_to_player)
             print("Path:", shopkeeper.current_path)

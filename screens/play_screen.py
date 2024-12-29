@@ -235,4 +235,4 @@ def play(SCREEN):
             return  # Exit the play function to stop the game loop
 
         pygame.display.flip()
-        clock.tick(100)
+        clock.tick(60)
