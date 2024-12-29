@@ -7,8 +7,13 @@ from fish import Fish
 from screens.game_over_screen import game_over
 from screens.game_map import *
 from screens.player import create_player, handle_player_logic
-from screens.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
+from logic.game_logic import handle_guard_collision, handle_hiding, handle_shopkeeper_collision, handle_fish_pickup
 from screens.game_finish_screen import game_finish  # Import the game finish screen
+# Import health display functions
+from utils.health_display import create_health_display, update_health_display
+# Import shopkeeper logic functions
+from logic.shopkeeper_logic import handle_shopkeeper_movement, handle_shopkeeper_chase
+from logic.draw_logic import draw_game_elements  # Corrected import statement
 
 
 def play(SCREEN):
@@ -28,12 +33,13 @@ def play(SCREEN):
     # Add the shopkeeper on the opposite side of the wall
     shopkeeper = Shopkeeper(
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
-        ground_rect=pygame.Rect(
-            Walls[0].rect.right + 200, Walls[0].rect.top, 600, Walls[0].rect.height),
         frame_width=48,
         frame_height=48,
-        scale=3
+        scale=3,
+        ground_level=ground
     )
+    shopkeeper.rect.topleft = (
+        Walls[0].rect.right + 200, ground - shopkeeper.rect.height)
 
     original_shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
 
@@ -45,8 +51,8 @@ def play(SCREEN):
         scale=0.5  # Adjust scale to make fish smaller
     )
 
-    original_fish_position = (shopkeeper.ground_rect.left + (shopkeeper.ground_rect.width // 2) - (fish.rect.width // 2),
-                              shopkeeper.ground_rect.bottom - fish.rect.height - 20)
+    original_fish_position = (shopkeeper.rect.left + (shopkeeper.rect.width // 2) - (fish.rect.width // 2) + 450,
+                              ground - fish.rect.height - 20)
 
     fish_picked_up = False
     # Track the fish's position when dropped
@@ -59,23 +65,7 @@ def play(SCREEN):
     # Add persistent horizontal velocity
     player.horizontal_velocity = 0
 
-    health_display = []
-
-    def create_health_display():
-        for i in range(player.health):
-            heart = pygame.image.load('assets/menu/Grass1.png').convert_alpha()
-            heart_rect = heart.get_rect(topleft=(20 + i * 30, 20))
-            health_display.append((heart, heart_rect))
-
-    def update_health_display():
-        for i, (heart, heart_rect) in enumerate(health_display):
-            heart_rect.topleft = (20 + i * 30, 20)
-            if i < player.health:
-                heart.set_alpha(255)
-            else:
-                heart.set_alpha(0)
-
-    create_health_display()
+    health_display = create_health_display(player.health)
 
     hiding_cooldown = 0  # Cooldown period in milliseconds
     hiding_buffer = 500  # Buffer period in milliseconds
@@ -93,6 +83,10 @@ def play(SCREEN):
     barrel_rect = barrel_image.get_rect(
         topleft=(0, ground - 640 - barrel_image.get_height()))
 
+    shopkeeper_chasing = False  # Flag to indicate if the shopkeeper is chasing the player
+
+    graph = create_graph(platforms, ground, Walls)
+
     while True:
         SCREEN.fill("black")
 
@@ -109,6 +103,10 @@ def play(SCREEN):
 
                     fish_picked_up, fish_position, last_fish_action_time = handle_fish_pickup(
                         player, fish, fish_picked_up, fish_position, last_fish_action_time, fish_cooldown)
+                if event.key == pygame.K_y:
+                    # start chasing the player
+                    shopkeeper_chasing = True
+                    fish_picked_up = True
 
         keys = pygame.key.get_pressed()
 
@@ -126,22 +124,51 @@ def play(SCREEN):
                 guard.horizontal_velocity = 1  # Change direction to right
 
             if player.collision_rect.colliderect(guard.collision_rect):
-                handle_guard_collision(player, Guards, update_health_display)
+                handle_guard_collision(player, Guards, lambda: update_health_display(
+                    health_display, player.health))
 
         # Handle guard collision
-        handle_guard_collision(player, Guards, update_health_display)
+        handle_guard_collision(player, Guards, lambda: update_health_display(
+            health_display, player.health))
+
+        # Check if the player picks up the fish
+        if not shopkeeper_chasing and fish_picked_up:
+            shopkeeper_chasing = True  # Start chasing the player
 
         # Shopkeeper logic
         shopkeeper.update()
-        shopkeeper.move(shopkeeper.horizontal_velocity, 0)  # Move shopkeeper
+        handle_shopkeeper_movement(
+            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot)
+        shopkeeper_chasing = handle_shopkeeper_chase(
+            shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 
-        # Change direction slightly before reaching the ground's edge
-        if shopkeeper.rect.right >= shopkeeper.ground_rect.right - 30:
-            shopkeeper.rect.right = shopkeeper.ground_rect.right - 100
-            shopkeeper.horizontal_velocity = -1  # Change direction to left
-        elif shopkeeper.rect.left <= shopkeeper.ground_rect.left + 30:
-            shopkeeper.rect.left = shopkeeper.ground_rect.left + 100
-            shopkeeper.horizontal_velocity = 1  # Change direction to right
+        # Handle shopkeeper collision with platforms
+        # on_platform = False
+        # for platform in platforms:
+        #     if (
+        #         shopkeeper.rect.colliderect(platform.rect)
+        #         and shopkeeper.y_velocity >= 0
+        #         and shopkeeper.rect.bottom <= platform.rect.top + 20
+        #         and platform.rect.left <= shopkeeper.rect.centerx <= platform.rect.right
+        #     ):
+        #         shopkeeper.rect.bottom = platform.rect.top
+        #         shopkeeper.is_jumping = False
+        #         shopkeeper.y_velocity = 0
+        #         on_platform = True
+        #         break
+
+        # if not on_platform and shopkeeper.rect.bottom < game_map.ground_level:
+        #     shopkeeper.is_jumping = True
+
+        # # Handle shopkeeper collision with walls
+        # for wall in Walls:
+        #     if shopkeeper.rect.colliderect(wall.rect):
+        #         overlap_left = wall.rect.right - shopkeeper.rect.left
+        #         overlap_right = shopkeeper.rect.right - wall.rect.left
+        #         if abs(overlap_left) < abs(overlap_right):
+        #             shopkeeper.rect.left = wall.rect.right
+        #         else:
+        #             shopkeeper.rect.right = wall.rect.left
 
         # Handle shopkeeper collision
         fish_picked_up, fish_position = handle_shopkeeper_collision(
@@ -174,18 +201,18 @@ def play(SCREEN):
                 on_platform = True
                 break
 
-        # for wall in Walls:
-        #     if player.rect.colliderect(wall.rect):
-        #         overlap_left = wall.rect.right - player.rect.left
-        #         overlap_right = player.rect.right - wall.rect.left
-        #         # check if player is on the left side of the wall
-        #         if abs(overlap_left) < abs(overlap_right):
-        #             player.rect.left = wall.rect.right
-        #         # check if player is on the right side of the wall
-        #         else:
-        #             player.rect.right = wall.rect.left
+        for wall in Walls:
+            if player.rect.colliderect(wall.rect):
+                overlap_left = wall.rect.right - player.rect.left
+                overlap_right = player.rect.right - wall.rect.left
+                # check if player is on the left side of the wall
+                if abs(overlap_left) < abs(overlap_right):
+                    player.rect.left = wall.rect.right
+                # check if player is on the right side of the wall
+                else:
+                    player.rect.right = wall.rect.left
 
-                # If the player is not on any platform, apply gravity
+        # If the player is not on any platform, apply gravity
         if not on_platform and player.rect.bottom < game_map.ground_level:
             player.is_jumping = True
 
@@ -197,44 +224,15 @@ def play(SCREEN):
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
 
-        for platform in platforms:
-            platform.draw(SCREEN, camera)
+        draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls)
 
-        # for wall in Walls:
-        #     wall.draw(SCREEN, camera)
-
-        for guard in Guards:
-            guard.draw(SCREEN, camera)
-        # Draw the shopkeeper
-        shopkeeper.draw(SCREEN, camera)
-
-        for spot in hiding_spot_objects:
-            spot.draw(SCREEN, camera, player.is_hidden and spot ==
-                      current_hiding_spot)
-
-        # Draw the fish in the middle of the shopkeeper's range and slightly above the ground
-        if not fish_picked_up:
-            fish.draw(SCREEN, fish_position[0] -
-                      camera.x_offset, fish_position[1])
-            fish.rect.topleft = fish_position
-        else:
-            # Draw the "Fish picked up" message below the player
-            message_rect = message_surface.get_rect(
-                center=(player.rect.centerx - camera.x_offset, player.rect.bottom + 5))  # Adjusted y-coordinate
-            SCREEN.blit(message_surface, message_rect)
-
+        if ENABLE_GRAPH_VISUALIZATION:
+            graph.draw(SCREEN, camera)
         # Check if the player reaches the barrel with the fish
         if fish_picked_up and player.collision_rect.colliderect(barrel_rect):
             game_finish(SCREEN)  # Display the game finish screen
-
-        player.draw(SCREEN, camera)
-
-        for heart, heart_rect in health_display:
-            SCREEN.blit(heart, heart_rect)
-
-        # Draw the barrel
-        SCREEN.blit(barrel_image, (barrel_rect.x -
-                    camera.x_offset, barrel_rect.y))
+            return  # Exit the play function to stop the game loop
 
         pygame.display.flip()
         clock.tick(60)
