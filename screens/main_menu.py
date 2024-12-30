@@ -2,7 +2,7 @@ import pygame
 from utils.button import Button
 from utils.font import get_font, draw_text_with_border
 from screens.play_screen import play
-from screens.options_screen import options
+from screens.howtoplay_screen import how_to_play
 from utils.globals import SCREEN_WIDTH, SCREEN_HEIGHT
 from sprite import Sprite
 import random
@@ -102,13 +102,13 @@ def main_menu(SCREEN):
             base_color="#000000",
             hovering_color="#FFFFFF",
         )
-        OPTIONS_BUTTON = Button(
-            image=pygame.image.load("assets/menu/play_button_rect.png"),
+        HOW_TO_PLAY_BUTTON = Button(
+            image=None,
             pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
-            text_input="OPTIONS",
+            text_input="HOW TO PLAY",
             font=get_font(50),
             base_color="#000000",
-            hovering_color="#FFFFFF",
+            hovering_color="Green",
         )
         QUIT_BUTTON = Button(
             image=pygame.image.load("assets/menu/play_button_rect.png"),
@@ -119,7 +119,7 @@ def main_menu(SCREEN):
             hovering_color="#FFFFFF",
         )
 
-        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
+        for button in [PLAY_BUTTON, HOW_TO_PLAY_BUTTON, QUIT_BUTTON]:
             button.changeColor(MENU_MOUSE_POS)
             button.update(SCREEN)
 
@@ -131,8 +131,8 @@ def main_menu(SCREEN):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
                     play(SCREEN)
-                if OPTIONS_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    options(SCREEN)
+                if HOW_TO_PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    how_to_play(SCREEN)
                 if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
                     pygame.quit()
                     sys.exit()
