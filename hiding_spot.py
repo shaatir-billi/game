@@ -4,7 +4,7 @@ import pygame
 class HidingSpot:
     def __init__(self, x, y, width, height, scale=1):
         self.image = pygame.image.load(
-            'assets/menu/Grass1.png').convert_alpha()
+            'assets/menu/3.png').convert_alpha()
         self.image = pygame.transform.scale(
             self.image, (int(width * scale), int(height * scale)))
         self.rect = pygame.Rect(x, y, int(width * scale), int(height * scale))

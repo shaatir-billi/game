@@ -225,7 +225,7 @@ def play(SCREEN):
         game_map.draw(SCREEN, camera)
 
         draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
-                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls)
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls, player.health)
 
         if ENABLE_GRAPH_VISUALIZATION:
             graph.draw(SCREEN, camera)

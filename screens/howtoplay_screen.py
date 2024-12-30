@@ -5,36 +5,35 @@ from utils.globals import *
 import sys
 
 
-def options(SCREEN):
+def how_to_play(SCREEN):
+    how_to_play_image = pygame.image.load("assets/map/how_to_ply.jpg")
+    how_to_play_image = pygame.transform.scale(
+        how_to_play_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
     while True:
         SCREEN.fill("white")
+        SCREEN.blit(how_to_play_image, (0, 0))
 
-        OPTIONS_MOUSE_POS = pygame.mouse.get_pos()
+        HOW_TO_PLAY_MOUSE_POS = pygame.mouse.get_pos()
 
-        OPTIONS_TEXT = get_font(45).render(
-            "Options Placeholder", True, "Black")
-        OPTIONS_RECT = OPTIONS_TEXT.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
-        SCREEN.blit(OPTIONS_TEXT, OPTIONS_RECT)
-
-        OPTIONS_BACK = Button(
+        BACK_BUTTON = Button(
             image=None,
-            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
+            pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.1),
             text_input="BACK",
             font=get_font(50),
             base_color="Black",
             hovering_color="Green",
         )
 
-        OPTIONS_BACK.changeColor(OPTIONS_MOUSE_POS)
-        OPTIONS_BACK.update(SCREEN)
+        BACK_BUTTON.changeColor(HOW_TO_PLAY_MOUSE_POS)
+        BACK_BUTTON.update(SCREEN)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if OPTIONS_BACK.checkForInput(OPTIONS_MOUSE_POS):
+                if BACK_BUTTON.checkForInput(HOW_TO_PLAY_MOUSE_POS):
                     return  # Back to main menu
 
         pygame.display.update()
