@@ -233,6 +233,9 @@ def play(SCREEN):
 
         player.collision_rect.topleft = player.rect.topleft
 
+        handle_guard_collision(player, Guards, lambda: update_health_display(
+            health_display, player.health))
+
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
 

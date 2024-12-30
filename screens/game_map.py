@@ -187,5 +187,6 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
     add_edge(graph, (3400, 750), (3600, 750))
     add_edge(graph, (800, 750), (1000, 750))
     add_edge(graph, (2830, 50), (3430, 50))
+    add_edge(graph, (900, 110), (450, 110))
 
     return graph
