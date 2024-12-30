@@ -1,4 +1,3 @@
-
 import gym
 from gym import spaces
 import numpy as np
@@ -16,7 +15,7 @@ class CatChaseEnv(gym.Env):
     """
     Custom Environment for the Cat Chase scenario.
     """
-    def __init__(self, cat_position, shopkeeper_position, guard_positions):
+    def __init__(self, cat_position, shopkeeper_position, guard_positions, guard_platforms):
         super().__init__()
 
         # Initial positions
@@ -46,6 +45,17 @@ class CatChaseEnv(gym.Env):
         pygame.display.set_caption("Cat Chase Environment")
         self.clock = pygame.time.Clock()
         self.running = True
+
+        # Initialize guard platforms
+        self.guard_platforms = guard_platforms
+        self.shopkeeper_speed = 0  # Initialize shopkeeper speed
+
+    def seed(self, seed=None):
+        """
+        Set the seed for the environment's random number generator.
+        """
+        self.np_random, seed = gym.utils.seeding.np_random(seed)
+        return [seed]
 
     def reset(self):
         """
@@ -83,122 +93,137 @@ class CatChaseEnv(gym.Env):
         for guard in self.guard_positions:
             obs.extend(guard)
         return np.array(obs, dtype=np.float32)
-
-    # def _update_shopkeeper(self, action):
-    #     """
-    #     Update the shopkeeper's position based on the action.
-    #     """
-    #     # Calculate distance to the cat
-    #     distance_to_cat = np.linalg.norm(
-    #         np.array(self.shopkeeper_position) - np.array(self.cat_position)
-    #     )
-
-    #     # Adjust speed based on distance
-    #     if distance_to_cat < MAP_WIDTH * 0.2:  # If within 5% of the map width
-    #         speed = 8
-    #     else:
-    #         speed = 4
-
-    #     # Update position based on action
-    #     if action == 0:  # Move right
-    #         self.shopkeeper_position[0] += speed
-    #     elif action == 1:  # Maintain position
-    #         pass
-    #     elif action == 2:  # Move left
-    #         self.shopkeeper_position[0] -= speed
+    
     def _update_shopkeeper(self, action):
         """
         Update the shopkeeper's position based on the action predicted by PPO,
         with speed adjustment depending on the proximity to the cat.
         """
+        # Initialize shopkeeper speed if it is not already set
+        if not hasattr(self, 'shopkeeper_speed') or self.shopkeeper_speed == 0:
+            self.shopkeeper_speed = 3  # Start with the minimum speed
+
         # Calculate the distance to the cat
         distance_to_cat = np.linalg.norm(np.array(self.shopkeeper_position) - np.array(self.cat_position))
 
-        # Adjust speed based on distance to cat
-        if distance_to_cat < 600:  # If within 600 units of the cat, increase speed
-            speed_multiplier = 2  # Move faster when close to the cat
-        else:
-            speed_multiplier = 1  # Normal speed when farther away
+        # Speed increases continuously as the distance decreases
+        max_speed = 6
+        min_speed = 3
+        max_distance = 1600
         
-        # Map PPO action to basic speed level (ignoring direction here, since A* handles that)
-        if action == 0:  # Move fast towards the cat
-            speed = 4 * speed_multiplier  # Higher speed when close to cat
-        elif action == 1:  # Maintain position or normal movement
-            speed = 2 * speed_multiplier  # Normal movement when not in a rush
-        else:  # Move slowly
-            speed = 1 * speed_multiplier  # Slow movement
-        
-        # Update the shopkeeper's position based on the action and the calculated speed
-        self.shopkeeper_position[0] += speed  # Direction will be handled by A*  # Move towards or away from the cat based on position
+        # Calculate the speed based on distance
+        speed = min_speed + (max_speed - min_speed) * (1 - distance_to_cat / max_distance)
+        speed = max(min_speed, min(speed, max_speed))  # Clamp speed between 3 and 6 initially
 
+        # Modify speed based on action
+        if action == 0:  # Fast movement
+            speed *= 1.5  # Increase speed
+            speed = min(speed, 6)  # Allow up to 6 for fast movement
+        elif action == 1:  # Normal movement
+            speed *= 1.0
+            speed = min(speed, 5)  # Cap at 5 for normal movement
+        elif action == 2:  # Slow movement
+            speed *= 0.5
+            speed = max(speed, 3)  # Ensure minimum speed of 3 for slow movement
+
+        # Smooth transition by damping abrupt changes
+        self.shopkeeper_speed = (self.shopkeeper_speed + speed) / 2  # Average with previous speed
+
+        # Update the shopkeeper's position
+        self.shopkeeper_position[0] += self.shopkeeper_speed  # Movement in the x-direction
+
+    
+    def get_shopkeeper_speed(self):
+        """
+        Get the current speed of the shopkeeper.
+        """
+        return self.shopkeeper_speed
 
     def _update_guard(self, guard_idx, action):
         """
         Update the guard's position based on the action.
+        The guard adjusts its movement based on the cat's position while staying on its platform.
         """
-        if action == 0:  # Patrol left
-            self.guard_positions[guard_idx][0] -= 2
-        elif action == 1:  # Patrol right
-            self.guard_positions[guard_idx][0] += 2
-        elif action == 2:  # Maintain position
-            pass
+        # Get the guard's current position and platform boundaries
+        guard_position = self.guard_positions[guard_idx]
+        platform_start, platform_end = self.guard_platforms[guard_idx]  # Assuming platform boundaries are pre-defined
 
-    # def _calculate_rewards(self):
-    #     """
-    #     Calculate the rewards based on the current positions.
-    #     """
-    #     distance = np.linalg.norm(np.array(self.shopkeeper_position) - np.array(self.cat_position))
-        
-    #     # If the cat is caught, give maximum reward
-    #     if distance < 10:
-    #         return 100, True  # High reward for catching the cat
-        
-    #     # Reward decreases with distance, with penalty
-    #     max_distance = MAP_WIDTH  # Max distance on the map
-    #     reward = max(0, (max_distance - distance) / max_distance * 10)  # Gradually increase reward as shopkeeper gets closer
-        
-    #     return reward, False  # Return reward and continue the game
+        # Determine the cat's position
+        cat_x, cat_y = self.cat_position
 
+        # Only update guard actions if the cat is on the same platform
+        if platform_start <= cat_x <= platform_end:
+            if action == 0:  # Move closer to the cat
+                if cat_x < guard_position[0]:  # Cat is to the left
+                    guard_position[0] -= 2  # Move left
+                elif cat_x > guard_position[0]:  # Cat is to the right
+                    guard_position[0] += 2  # Move right
+            elif action == 1:  # Move to the cat's predicted position
+               
+                guard_position[0] += 2 if cat_x > guard_position[0] else -2
+            elif action == 2:  # Stay near the middle of the cat's position
+                midpoint = (platform_start + platform_end) // 2
+                if guard_position[0] < midpoint:
+                    guard_position[0] += 2
+                elif guard_position[0] > midpoint:
+                    guard_position[0] -= 2
+        else:
+            # Cat is not on the platform, maintain a normal patrolling behavior
+            if action == 0:  # Patrol left
+                guard_position[0] = max(platform_start, guard_position[0] - 2)
+            elif action == 1:  # Patrol right
+                guard_position[0] = min(platform_end, guard_position[0] + 2)
+            elif action == 2:  # Maintain position
+                pass
+
+        # Ensure the guard stays within the platform boundaries
+        guard_position[0] = max(platform_start, min(platform_end, guard_position[0]))
+
+   
     def _calculate_rewards(self):
         """
-        Calculate the rewards based on the shopkeeper's distance to the cat and speed.
-        Rewards are increased when close to the cat, with additional incentives to move fast.
+        Calculate the rewards for the shopkeeper and guards based on their objectives.
         """
+        # Shopkeeper reward logic
         distance = np.linalg.norm(np.array(self.shopkeeper_position) - np.array(self.cat_position))
+        reward_shopkeeper = 0
         
-        # If the cat is caught, give maximum reward
+        # Maximum reward for catching the cat
         if distance < 10:
-            return 100, True  # Maximum reward for catching the cat
+            return 100, True  # End the game
         
-        # Reward increases as distance decreases (approaching the cat)
-        max_distance = MAP_WIDTH  # Max distance on the map
-        reward = max(0, (max_distance - distance) / max_distance * 10)  # Larger reward for getting closer to the cat
+        max_distance = MAP_WIDTH  # Max possible distance
+        reward_shopkeeper = max(0, (max_distance - distance) / max_distance * 10)
         
-        # Encourage faster movement when within 600 units of the cat
         if distance <= 600:
-            reward += 5  # Reward for approaching the cat within 600 units
-            
-            # If close enough to cat, encourage faster movement
+            reward_shopkeeper += 5
             if distance <= 300:
-                reward += 5  # Boost reward for being very close to the cat
-                
-        # Penalize for moving too far from the cat
+                reward_shopkeeper += 5
         if distance > 600:
-            reward -= 3  # Penalize for being far from the cat (out of the 600 unit range)
+            reward_shopkeeper -= 3
         
-        # Further reward when shopkeeper reduces distance compared to the last step
-        # This helps encourage the shopkeeper to keep moving toward the cat rather than moving randomly
-        previous_distance = self.previous_distance_to_cat  # Keep track of previous distance in the environment
-        if distance < previous_distance:
-            reward += 2  # Small reward for reducing distance
+        # Encourage reducing the distance
+        if distance < self.previous_distance_to_cat:
+            reward_shopkeeper += 2
         else:
-            reward -= 2  # Penalize for increasing distance
+            reward_shopkeeper -= 2
         
-        # Update the previous distance to the current one for comparison in next step
+        # Update previous distance
         self.previous_distance_to_cat = distance
         
-        return reward, False  # Return reward and continue the game
+        # Guard-specific rewards
+        reward_guards = 0
+        for guard_idx, guard_position in enumerate(self.guard_positions):
+            guard_distance = np.linalg.norm(np.array(guard_position) - np.array(self.cat_position))
 
+            if guard_distance < 10:  # Guard catches the cat
+                reward_guards += 20  # Incentive for guards catching the cat
+            elif self.guard_platforms[guard_idx][0] <= self.cat_position[0] <= self.guard_platforms[guard_idx][1]:
+                # Reward guards for effectively patrolling near the cat
+                reward_guards += max(0, 10 - (guard_distance / 50))  # Scale with closeness
+
+        # Combine rewards or return separately
+        return reward_shopkeeper + reward_guards, False
 
     def render(self, mode='human'):
         """

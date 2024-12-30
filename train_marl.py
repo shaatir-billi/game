@@ -1,16 +1,26 @@
 import gym
 from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
 from logic.marl_env import CatChaseEnv
 
 print("Creating the environment...")
 
-# Define initial positions
-cat_position = [8, 3]
-shopkeeper_position = [0, 2]
-guard_positions = [[2, 3], [7, 4]]
+# Define initial positions for the cat, shopkeeper, and guards
+cat_position = [100, 100]
+shopkeeper_position = [200, 200]
+guard_positions = [[300, 300], [400, 400]]
 
-# Create the environment with initial positions
-env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions)
+# Define the platform boundaries for the guards
+guard_platforms = [
+    (1500, 2000),  # Platform boundaries for guard 0
+    (3000, 3500)   # Platform boundaries for guard 1
+]
+
+# Create the environment
+env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms)
+
+# Wrap the environment
+env = make_vec_env(lambda: env, n_envs=1)
 
 print("Defining the model...")
 # Define the model

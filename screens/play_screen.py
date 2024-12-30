@@ -31,6 +31,12 @@ def play(SCREEN):
     Guards = create_guards(platforms)
     hiding_spot_objects = create_hiding_spots(platforms)
 
+    # Define the platform boundaries for the guards
+    guard_platforms = [
+        (platforms[0].rect.left, platforms[0].rect.right),  # Platform boundaries for guard 0
+        (platforms[1].rect.left, platforms[1].rect.right)   # Platform boundaries for guard 1
+    ]
+
     shopkeeper = Shopkeeper(
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
         frame_width=48,
@@ -88,7 +94,7 @@ def play(SCREEN):
     cat_position = [player.rect.x, player.rect.y]
     shopkeeper_position = [shopkeeper.rect.x, shopkeeper.rect.y]
     guard_positions = [[guard.rect.x, guard.rect.y] for guard in Guards]
-    marl_env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions)
+    marl_env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms)
 
     while True:
         SCREEN.fill("black")
@@ -119,22 +125,20 @@ def play(SCREEN):
         actions, _states = model.predict(obs)
         print(f"Predicted actions: {actions}")
 
-        # Map PPO action to shopkeeper's speed
-        # Here, I assume actions[0] decides speed (modify according to your action space definition)
-        if actions[0] == 0:  # Move fast towards the cat
-            shopkeeper_speed = 8
-        elif actions[0] == 1:  # Normal movement
-            shopkeeper_speed = 2
-        else:
-            shopkeeper_speed = 0  # No movement
+        # Step forward in the MARL environment
+        obs, reward, done, info = marl_env.step(actions)
+        print(
+            f"Step output: Observation: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
 
-        # Print shopkeeper speed
+        # Get the shopkeeper's speed from the MARL environment
+        shopkeeper_speed = marl_env.get_shopkeeper_speed()
         print(f"Shopkeeper speed: {shopkeeper_speed}")
-        # Calculate and print distance to cart
-        cart_position = (player.rect.x, player.rect.y)
+
+        # Calculate and print distance to car
+        car_position = (player.rect.x, player.rect.y)
         shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
-        distance_to_cart = math.sqrt((shopkeeper_position[0] - cart_position[0]) ** 2 + (
-            shopkeeper_position[1] - cart_position[1]) ** 2)
+        distance_to_cart = math.sqrt((shopkeeper_position[0] - car_position[0]) ** 2 + (
+            shopkeeper_position[1] - car_position[1]) ** 2)
         print(f"Distance to car: {distance_to_cart}")
         # Check if the player picks up the fish
         if not shopkeeper_chasing and fish_picked_up:
@@ -143,8 +147,7 @@ def play(SCREEN):
         # Now update the shopkeeper based on this speed
         shopkeeper.update()
         handle_shopkeeper_movement(
-
-            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot)
+            shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot, shopkeeper_speed)
 
         shopkeeper_chasing = handle_shopkeeper_chase(
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
@@ -161,7 +164,37 @@ def play(SCREEN):
             elif guard.rect.left <= guard.platform_rect.left + 30:
                 guard.rect.left = guard.platform_rect.left + 100
                 guard.horizontal_velocity = 1
+        # for i, guard in enumerate(Guards):
+        #     # Extract the action for the current guard from MARL actions
+        #     guard_action = actions[i + 1]  # First action is for the shopkeeper, so guard actions start from index 1
 
+        #     # Use MARL environment's action to update guard position
+        #     if guard_action == 0:  # Move closer to the cat
+        #         if player.rect.x < guard.rect.x:
+        #             guard.rect.x -= 2  # Move left
+        #         elif player.rect.x > guard.rect.x:
+        #             guard.rect.x += 2  # Move right
+        #     elif guard_action == 1:  # Patrol along the platform
+        #         guard.rect.x += guard.horizontal_velocity * 2  # Patrol in current direction
+        #     elif guard_action == 2:  # Stay near the center of the platform
+        #         platform_start, platform_end = guard.platform_rect.left, guard.platform_rect.right
+        #         platform_center = (platform_start + platform_end) // 2
+        #         if guard.rect.x < platform_center:
+        #             guard.rect.x += 2  # Move right to center
+        #         elif guard.rect.x > platform_center:
+        #             guard.rect.x -= 2  # Move left to center
+
+        #     # Ensure guards stay within platform boundaries
+        #     if guard.rect.right >= guard.platform_rect.right - 30:
+        #         guard.rect.right = guard.platform_rect.right - 100
+        #         guard.horizontal_velocity = -1
+        #     elif guard.rect.left <= guard.platform_rect.left + 30:
+        #         guard.rect.left = guard.platform_rect.left + 100
+        #         guard.horizontal_velocity = 1
+
+        #     # Debugging output for guard positions and actions
+        #     print(f"Guard {i} position after action: {guard.rect.topleft}, Action: {guard_action}")
+        
         fish_picked_up, fish_position = handle_shopkeeper_collision(
             player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
 
@@ -223,7 +256,7 @@ def play(SCREEN):
             print(f"Guard {i} position: {guard.rect.topleft}")
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(100)
 # import pygame
 # import sys
 # from camera import Camera

@@ -1,8 +1,7 @@
 import pygame
 import math
 
-
-def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot):
+def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot, shopkeeper_speed):
     if not hasattr(shopkeeper, "current_path"):
         shopkeeper.current_path = []  # Initialize the path if not already present
     if not hasattr(shopkeeper, "last_path_update"):
@@ -34,7 +33,7 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                 nodes, key=lambda node: manhattan_distance(node, player_center))
 
             # if closest node has (50) in the y axis, then update the path after 10 seconds, else update the path after 1 seconds
-            path_update_time = 10000 if closest_node[1] == 50 else 5000
+            path_update_time = 13000 if closest_node[1] == 50 else 5000
 
             # Recalculate path only if current path is empty or target has moved
             if not shopkeeper.current_path or \
@@ -66,17 +65,17 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                 if abs(dx) > TOLERANCE:  # Horizontal movement
                     if dx > 0:  # Move right
                         print("Moving right")
-                        shopkeeper.move(2, 0)
+                        shopkeeper.move(shopkeeper_speed, 0)
                     else:  # Move left
                         print("Moving left")
-                        shopkeeper.move(-2, 0)
+                        shopkeeper.move(-shopkeeper_speed, 0)
                 elif abs(dy) > TOLERANCE:  # Vertical movement
                     if dy > 0:  # Move down
                         print("Moving down")
-                        shopkeeper.move(0, 2)
+                        shopkeeper.move(0, shopkeeper_speed)
                     else:  # Move up
                         print("Moving up")
-                        shopkeeper.move(0, -2)
+                        shopkeeper.move(0, -shopkeeper_speed)
     else:
         # Make the shopkeeper patrol
         if shopkeeper.rect.right >= 2800 and shopkeeper.rect.right < 4000 and shopkeeper.moving_right:
@@ -92,7 +91,6 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         shopkeeper.rect.left = 0
     elif shopkeeper.rect.right > map_width:
         shopkeeper.rect.right = map_width
-
 
 def handle_shopkeeper_chase(shopkeeper, player, fish_picked_up, shopkeeper_chasing):
     if not fish_picked_up:
