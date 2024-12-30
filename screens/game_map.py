@@ -19,21 +19,21 @@ def create_platforms(ground):
         Platform("assets/map/platform2.png", 2200, ground - 140, 100, 20),
         Platform("assets/map/platform2.png", 1200, ground - 350, 100, 20),
         Platform("assets/map/platform2.png", 1200, ground - 350, 100, 20),
-        Platform("assets/map/platform2.png", 3600, ground - 100, 100, 20),
+        Platform("assets/map/platform3.png", 3600, ground - 100, 100, 20),
 
         # 3 tiles
         Platform("assets/map/platform2.png", 2300, ground - 250, 200, 20),
         Platform("assets/map/platform2.png", 1600, ground - 630, 200, 20),
         Platform("assets/map/platform2.png", 1900, ground - 630, 200, 20),
-        Platform("assets/map/platform2.png", 2700, ground - 550, 200, 20),
-        Platform("assets/map/platform2.png", 2580, ground - 100, 200, 20),
+        Platform("assets/map/platform3.png", 2700, ground - 550, 200, 20),
+        Platform("assets/map/platform3.png", 2580, ground - 100, 200, 20),
 
         # 4 tiles
         Platform("assets/map/platform2.png", 1000, ground - 200, 250, 20),
         Platform("assets/map/platform2.png", 2100, ground - 400, 250, 20),
-        Platform("assets/map/platform2.png", 3500, ground - 550, 250, 20),
-        Platform("assets/map/platform2.png", 2630, ground - 280, 250, 20),
-        Platform("assets/map/platform2.png", 3350, ground - 290, 250, 20),
+        Platform("assets/map/platform3.png", 3500, ground - 550, 250, 20),
+        Platform("assets/map/platform3.png", 2630, ground - 280, 250, 20),
+        Platform("assets/map/platform3.png", 3350, ground - 290, 250, 20),
 
         # Long platforms
         Platform("assets/map/platform2.png", 1350, ground - 270, 800, 20),
@@ -41,8 +41,8 @@ def create_platforms(ground):
         Platform("assets/map/platform2.png", 1000, ground - 550, 500, 20),
         Platform("assets/map/platform2.png", 0, ground - 640, 900, 20),
         Platform("assets/map/platform2.png", 2230, ground - 700, 1200, 20),
-        Platform("assets/map/platform2.png", 2900, ground - 200, 600, 20),
-        Platform("assets/map/platform2.png", 3000, ground - 460, 400, 20),
+        Platform("assets/map/platform3.png", 2900, ground - 200, 600, 20),
+        Platform("assets/map/platform3.png", 3000, ground - 460, 400, 20),
     ]
 
 
