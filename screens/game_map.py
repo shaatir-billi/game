@@ -57,14 +57,14 @@ def create_guards(platforms):
         Guard("assets/sprites/guard/girl_walk.png",
               platforms[16].rect, 48, 48, 3),
         Guard("assets/sprites/guard/girl_walk.png",
-              platforms[15].rect, 48, 48, 3)
+              platforms[21].rect, 48, 48, 3)
     ]
 
 
 def create_hiding_spots(platforms):
     hiding_spots = [
         (16, 80, 1),  # Platform index 16, 80 pixels from the left, scale 3
-        (2, 30, 1),  # Platform index 2, 30 pixels from the left, scale 2
+        (21, 50, 1),  # Platform index 2, 30 pixels from the left, scale 2
         (5, 50, 1),  # Platform index 5, 50 pixels from the left, scale 2.5
     ]
     return [
@@ -187,5 +187,6 @@ def create_graph(platforms, ground_level, walls, max_fall_distance=100, max_jump
     add_edge(graph, (3400, 750), (3600, 750))
     add_edge(graph, (800, 750), (1000, 750))
     add_edge(graph, (2830, 50), (3430, 50))
+    add_edge(graph, (900, 110), (450, 110))
 
     return graph
