@@ -6,7 +6,7 @@ import sys
 
 
 def how_to_play(SCREEN):
-    how_to_play_image = pygame.image.load("assets/map/sky.jpeg")
+    how_to_play_image = pygame.image.load("assets/map/how_to_ply.jpg")
     how_to_play_image = pygame.transform.scale(
         how_to_play_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
