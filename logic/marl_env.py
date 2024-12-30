@@ -15,7 +15,7 @@ class CatChaseEnv(gym.Env):
     """
     Custom Environment for the Cat Chase scenario.
     """
-    def __init__(self, cat_position, shopkeeper_position, guard_positions, guard_platforms):
+    def __init__(self, cat_position, shopkeeper_position, guard_positions, guard_platforms, guard_directions):
         super().__init__()
 
         # Initial positions
@@ -34,7 +34,7 @@ class CatChaseEnv(gym.Env):
 
         # Define observation and action spaces
         self.observation_space = spaces.Box(low=-MAP_WIDTH, high=MAP_WIDTH, shape=(4 + 2 * self.num_guards,), dtype=np.float32)
-        self.action_space = spaces.MultiDiscrete([3] + [3] * self.num_guards)  # Shopkeeper: 3 actions, Guards: 3 actions
+        self.action_space = spaces.MultiDiscrete([3] + [2] * self.num_guards)  # Shopkeeper: 3 actions, Guards: 2 actions
 
         # Initialize Pygame
         pygame.init()
@@ -46,8 +46,9 @@ class CatChaseEnv(gym.Env):
         self.clock = pygame.time.Clock()
         self.running = True
 
-        # Initialize guard platforms
+        # Initialize guard platforms and directions
         self.guard_platforms = guard_platforms
+        self.guard_directions = guard_directions
         self.shopkeeper_speed = 0  # Initialize shopkeeper speed
 
     def seed(self, seed=None):
@@ -138,48 +139,62 @@ class CatChaseEnv(gym.Env):
         Get the current speed of the shopkeeper.
         """
         return self.shopkeeper_speed
-
-    def _update_guard(self, guard_idx, action):
+    
+    def _maintain_patrol(self, guard_index):
         """
-        Update the guard's position based on the action.
-        The guard adjusts its movement based on the cat's position while staying on its platform.
+        Keep the guard patrolling in its designated area.
         """
-        # Get the guard's current position and platform boundaries
-        guard_position = self.guard_positions[guard_idx]
-        platform_start, platform_end = self.guard_platforms[guard_idx]  # Assuming platform boundaries are pre-defined
+        guard_position = self.guard_positions[guard_index]
+        platform_bounds = self.guard_platforms[guard_index]
 
-        # Determine the cat's position
-        cat_x, cat_y = self.cat_position
+        # Simple logic to patrol within the platform bounds
+        patrol_direction = self.guard_directions[guard_index]
+        new_position = guard_position[0] + patrol_direction * self.shopkeeper_speed
 
-        # Only update guard actions if the cat is on the same platform
-        if platform_start <= cat_x <= platform_end:
-            if action == 0:  # Move closer to the cat
-                if cat_x < guard_position[0]:  # Cat is to the left
-                    guard_position[0] -= 2  # Move left
-                elif cat_x > guard_position[0]:  # Cat is to the right
-                    guard_position[0] += 2  # Move right
-            elif action == 1:  # Move to the cat's predicted position
-               
-                guard_position[0] += 2 if cat_x > guard_position[0] else -2
-            elif action == 2:  # Stay near the middle of the cat's position
-                midpoint = (platform_start + platform_end) // 2
-                if guard_position[0] < midpoint:
-                    guard_position[0] += 2
-                elif guard_position[0] > midpoint:
-                    guard_position[0] -= 2
+        # Reverse direction if the guard reaches the platform bounds
+        if new_position < platform_bounds[0] or new_position > platform_bounds[1]:
+            self.guard_directions[guard_index] *= -1  # Reverse direction
         else:
-            # Cat is not on the platform, maintain a normal patrolling behavior
-            if action == 0:  # Patrol left
-                guard_position[0] = max(platform_start, guard_position[0] - 2)
-            elif action == 1:  # Patrol right
-                guard_position[0] = min(platform_end, guard_position[0] + 2)
-            elif action == 2:  # Maintain position
-                pass
+            self.guard_positions[guard_index][0] = new_position
 
-        # Ensure the guard stays within the platform boundaries
-        guard_position[0] = max(platform_start, min(platform_end, guard_position[0]))
+    def _shrink_patrol(self, guard_index):
+        """
+        Shrink the guard's patrol area towards the cat's position.
+        """
+        guard_position = self.guard_positions[guard_index]
+        cat_position = self.cat_position
+        platform_bounds = self.guard_platforms[guard_index]
 
-   
+        # Calculate the horizontal and vertical distance to the cat
+        distance_to_cat_x = abs(guard_position[0] - cat_position[0])
+        
+        # Shrink patrol area horizontally (left or right depending on the cat's position)
+        if distance_to_cat_x > 0:  # if there's horizontal distance to the cat
+            # Move towards the cat on the x-axis
+            if guard_position[0] < cat_position[0]:
+                # Move the guard closer to the cat, but constrain within platform bounds
+                guard_position[0] = min(guard_position[0] + self.shopkeeper_speed, platform_bounds[1])
+            elif guard_position[0] > cat_position[0]:
+                guard_position[0] = max(guard_position[0] - self.shopkeeper_speed, platform_bounds[0])
+
+
+        # Ensure the guard stays within platform bounds after shrinking
+        guard_position[0] = max(platform_bounds[0], min(guard_position[0], platform_bounds[1]))
+        guard_position[1] = max(platform_bounds[0], min(guard_position[1], platform_bounds[1]))
+
+        # Update the guard's position
+        self.guard_positions[guard_index] = guard_position
+
+
+
+
+    def _update_guard(self, guard_index, action):
+        if action == 0:  # Maintain patrol
+            self._maintain_patrol(guard_index)
+        elif action == 1:  # Shrink patrol
+            self._shrink_patrol(guard_index)
+
+
     def _calculate_rewards(self):
         """
         Calculate the rewards for the shopkeeper and guards based on their objectives.
@@ -210,20 +225,35 @@ class CatChaseEnv(gym.Env):
         
         # Update previous distance
         self.previous_distance_to_cat = distance
-        
+
         # Guard-specific rewards
         reward_guards = 0
         for guard_idx, guard_position in enumerate(self.guard_positions):
             guard_distance = np.linalg.norm(np.array(guard_position) - np.array(self.cat_position))
 
-            if guard_distance < 10:  # Guard catches the cat
-                reward_guards += 20  # Incentive for guards catching the cat
-            elif self.guard_platforms[guard_idx][0] <= self.cat_position[0] <= self.guard_platforms[guard_idx][1]:
-                # Reward guards for effectively patrolling near the cat
+            # Reward guards for catching the cat
+            if guard_distance < 10:
+                reward_guards += 20
+
+            # Reward guards for shrinking their patrol areas towards the cat
+            if self.guard_directions[guard_idx] < 0 and guard_position[0] > self.cat_position[0]:  # Moving left towards cat
+                reward_guards += 2
+
+            if self.guard_directions[guard_idx] > 0 and guard_position[0] < self.cat_position[0]:  # Moving right towards cat
+                reward_guards += 2
+
+            # Reward for effective patrolling near the cat's position
+            if self.guard_platforms[guard_idx][0] <= self.cat_position[0] <= self.guard_platforms[guard_idx][1]:
                 reward_guards += max(0, 10 - (guard_distance / 50))  # Scale with closeness
 
-        # Combine rewards or return separately
-        return reward_shopkeeper + reward_guards, False
+            # Penalize guards for ineffective patrolling (too far from the cat)
+            else:
+                reward_guards -= 5
+
+        # Combine rewards
+        total_reward = reward_shopkeeper + reward_guards
+        return total_reward, False
+   
 
     def render(self, mode='human'):
         """

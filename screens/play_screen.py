@@ -37,6 +37,9 @@ def play(SCREEN):
         (platforms[1].rect.left, platforms[1].rect.right)   # Platform boundaries for guard 1
     ]
 
+    # Initialize guard directions (1 for right, -1 for left)
+    guard_directions = [1, -1]
+
     shopkeeper = Shopkeeper(
         sprite_sheet_path="assets/sprites/shopkeeper/man_walk.png",
         frame_width=48,
@@ -94,7 +97,7 @@ def play(SCREEN):
     cat_position = [player.rect.x, player.rect.y]
     shopkeeper_position = [shopkeeper.rect.x, shopkeeper.rect.y]
     guard_positions = [[guard.rect.x, guard.rect.y] for guard in Guards]
-    marl_env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms)
+    marl_env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms, guard_directions)
 
     while True:
         SCREEN.fill("black")
@@ -127,19 +130,17 @@ def play(SCREEN):
 
         # Step forward in the MARL environment
         obs, reward, done, info = marl_env.step(actions)
-        print(
-            f"Step output: Observation: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
-
+        
         # Get the shopkeeper's speed from the MARL environment
         shopkeeper_speed = marl_env.get_shopkeeper_speed()
         print(f"Shopkeeper speed: {shopkeeper_speed}")
 
         # Calculate and print distance to car
-        car_position = (player.rect.x, player.rect.y)
+        cat_position = (player.rect.x, player.rect.y)
         shopkeeper_position = (shopkeeper.rect.x, shopkeeper.rect.y)
-        distance_to_cart = math.sqrt((shopkeeper_position[0] - car_position[0]) ** 2 + (
-            shopkeeper_position[1] - car_position[1]) ** 2)
-        print(f"Distance to car: {distance_to_cart}")
+        distance_to_cat = math.sqrt((shopkeeper_position[0] - cat_position[0]) ** 2 + (
+            shopkeeper_position[1] - cat_position[1]) ** 2)
+        print(f"Distance to car: {distance_to_cat}")
         # Check if the player picks up the fish
         if not shopkeeper_chasing and fish_picked_up:
             shopkeeper_chasing = True  # Start chasing the player
@@ -152,7 +153,12 @@ def play(SCREEN):
         shopkeeper_chasing = handle_shopkeeper_chase(
             shopkeeper, player, fish_picked_up, shopkeeper_chasing)
 
-        for guard in Guards:
+        # Use the guard actions to update their positions
+        for i, guard in enumerate(Guards):
+            guard_action = actions[i + 1]  # First action is for the shopkeeper, so guard actions start from index 1
+            print(f"Predicted action for guard {i}: {guard_action}")  # Print the predicted action for each guard
+            marl_env._update_guard(i, guard_action)  # Update guard position based on action
+
             guard.update()
             guard.move(guard.horizontal_velocity * shopkeeper_speed, 0)
             print(
@@ -164,36 +170,10 @@ def play(SCREEN):
             elif guard.rect.left <= guard.platform_rect.left + 30:
                 guard.rect.left = guard.platform_rect.left + 100
                 guard.horizontal_velocity = 1
-        # for i, guard in enumerate(Guards):
-        #     # Extract the action for the current guard from MARL actions
-        #     guard_action = actions[i + 1]  # First action is for the shopkeeper, so guard actions start from index 1
-
-        #     # Use MARL environment's action to update guard position
-        #     if guard_action == 0:  # Move closer to the cat
-        #         if player.rect.x < guard.rect.x:
-        #             guard.rect.x -= 2  # Move left
-        #         elif player.rect.x > guard.rect.x:
-        #             guard.rect.x += 2  # Move right
-        #     elif guard_action == 1:  # Patrol along the platform
-        #         guard.rect.x += guard.horizontal_velocity * 2  # Patrol in current direction
-        #     elif guard_action == 2:  # Stay near the center of the platform
-        #         platform_start, platform_end = guard.platform_rect.left, guard.platform_rect.right
-        #         platform_center = (platform_start + platform_end) // 2
-        #         if guard.rect.x < platform_center:
-        #             guard.rect.x += 2  # Move right to center
-        #         elif guard.rect.x > platform_center:
-        #             guard.rect.x -= 2  # Move left to center
-
-        #     # Ensure guards stay within platform boundaries
-        #     if guard.rect.right >= guard.platform_rect.right - 30:
-        #         guard.rect.right = guard.platform_rect.right - 100
-        #         guard.horizontal_velocity = -1
-        #     elif guard.rect.left <= guard.platform_rect.left + 30:
-        #         guard.rect.left = guard.platform_rect.left + 100
-        #         guard.horizontal_velocity = 1
-
-        #     # Debugging output for guard positions and actions
-        #     print(f"Guard {i} position after action: {guard.rect.topleft}, Action: {guard_action}")
+            
+            if player.collision_rect.colliderect(guard.collision_rect):
+                handle_guard_collision(player, Guards, lambda: update_health_display(
+                    health_display, player.health))
         
         fish_picked_up, fish_position = handle_shopkeeper_collision(
             player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
@@ -233,14 +213,11 @@ def play(SCREEN):
 
         player.collision_rect.topleft = player.rect.topleft
 
-        handle_guard_collision(player, Guards, lambda: update_health_display(
-            health_display, player.health))
-
         camera.follow_sprite(player)
         game_map.draw(SCREEN, camera)
 
         draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
-                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls, player.health)
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls,player_health=player.health)
 
         if ENABLE_GRAPH_VISUALIZATION:
             graph.draw(SCREEN, camera)

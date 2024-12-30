@@ -16,8 +16,11 @@ guard_platforms = [
     (3000, 3500)   # Platform boundaries for guard 1
 ]
 
+# Initialize guard directions (1 for right, -1 for left)
+guard_directions = [1, -1]
+
 # Create the environment
-env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms)
+env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms, guard_directions)
 
 # Wrap the environment
 env = make_vec_env(lambda: env, n_envs=1)
@@ -45,5 +48,6 @@ for _ in range(1000):
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
-
 print("Training and testing completed.")
+
+
