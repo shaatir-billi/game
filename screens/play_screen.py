@@ -33,8 +33,10 @@ def play(SCREEN):
 
     # Define the platform boundaries for the guards
     guard_platforms = [
-        (platforms[0].rect.left, platforms[0].rect.right),  # Platform boundaries for guard 0
-        (platforms[1].rect.left, platforms[1].rect.right)   # Platform boundaries for guard 1
+        # Platform boundaries for guard 0
+        (platforms[0].rect.left, platforms[0].rect.right),
+        # Platform boundaries for guard 1
+        (platforms[1].rect.left, platforms[1].rect.right)
     ]
 
     # Initialize guard directions (1 for right, -1 for left)
@@ -97,7 +99,8 @@ def play(SCREEN):
     cat_position = [player.rect.x, player.rect.y]
     shopkeeper_position = [shopkeeper.rect.x, shopkeeper.rect.y]
     guard_positions = [[guard.rect.x, guard.rect.y] for guard in Guards]
-    marl_env = CatChaseEnv(cat_position, shopkeeper_position, guard_positions, guard_platforms, guard_directions)
+    marl_env = CatChaseEnv(cat_position, shopkeeper_position,
+                           guard_positions, guard_platforms, guard_directions)
 
     while True:
         SCREEN.fill("black")
@@ -130,7 +133,7 @@ def play(SCREEN):
 
         # Step forward in the MARL environment
         obs, reward, done, info = marl_env.step(actions)
-        
+
         # Get the shopkeeper's speed from the MARL environment
         shopkeeper_speed = marl_env.get_shopkeeper_speed()
         print(f"Shopkeeper speed: {shopkeeper_speed}")
@@ -155,9 +158,12 @@ def play(SCREEN):
 
         # Use the guard actions to update their positions
         for i, guard in enumerate(Guards):
-            guard_action = actions[i + 1]  # First action is for the shopkeeper, so guard actions start from index 1
-            print(f"Predicted action for guard {i}: {guard_action}")  # Print the predicted action for each guard
-            marl_env._update_guard(i, guard_action)  # Update guard position based on action
+            # First action is for the shopkeeper, so guard actions start from index 1
+            guard_action = actions[i + 1]
+            # Print the predicted action for each guard
+            print(f"Predicted action for guard {i}: {guard_action}")
+            # Update guard position based on action
+            marl_env._update_guard(i, guard_action)
 
             guard.update()
             guard.move(guard.horizontal_velocity * shopkeeper_speed, 0)
@@ -170,11 +176,11 @@ def play(SCREEN):
             elif guard.rect.left <= guard.platform_rect.left + 30:
                 guard.rect.left = guard.platform_rect.left + 100
                 guard.horizontal_velocity = 1
-            
+
             if player.collision_rect.colliderect(guard.collision_rect):
                 handle_guard_collision(player, Guards, lambda: update_health_display(
                     health_display, player.health))
-        
+
         fish_picked_up, fish_position = handle_shopkeeper_collision(
             player, shopkeeper, fish_picked_up, original_shopkeeper_position, original_fish_position)
 
@@ -217,7 +223,7 @@ def play(SCREEN):
         game_map.draw(SCREEN, camera)
 
         draw_game_elements(SCREEN, camera, game_map, platforms, Guards, shopkeeper, hiding_spot_objects, fish, fish_picked_up,
-                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls,player_health=player.health)
+                           fish_position, player, message_surface, barrel_image, barrel_rect, health_display, current_hiding_spot, Walls, player_health=player.health)
 
         if ENABLE_GRAPH_VISUALIZATION:
             graph.draw(SCREEN, camera)
@@ -236,7 +242,7 @@ def play(SCREEN):
             print(f"Guard {i} position: {guard.rect.topleft}")
 
         pygame.display.flip()
-        clock.tick(100)
+        clock.tick(60)
 # import pygame
 # import sys
 # from camera import Camera

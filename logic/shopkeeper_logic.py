@@ -1,6 +1,7 @@
 import pygame
 import math
 
+
 def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width, keys, graph, current_hiding_spot, shopkeeper_speed):
     if not hasattr(shopkeeper, "current_path"):
         shopkeeper.current_path = []  # Initialize the path if not already present
@@ -33,7 +34,7 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
                 nodes, key=lambda node: manhattan_distance(node, player_center))
 
             # if closest node has (50) in the y axis, then update the path after 10 seconds, else update the path after 1 seconds
-            path_update_time = 13000 if closest_node[1] == 50 else 5000
+            path_update_time = 13000 if closest_node[1] == 50 else 2000
 
             # Recalculate path only if current path is empty or target has moved
             if not shopkeeper.current_path or \
@@ -91,6 +92,7 @@ def handle_shopkeeper_movement(shopkeeper, player, shopkeeper_chasing, map_width
         shopkeeper.rect.left = 0
     elif shopkeeper.rect.right > map_width:
         shopkeeper.rect.right = map_width
+
 
 def handle_shopkeeper_chase(shopkeeper, player, fish_picked_up, shopkeeper_chasing):
     if not fish_picked_up:
