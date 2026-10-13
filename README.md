@@ -1,26 +1,5 @@
 # shaatir-billi
 
-## Browser game
-
-Play at [shaatirbilli.mhadi.dev](https://shaatirbilli.mhadi.dev). Use Node.js 22 or newer for the browser tools.
-
-```sh
-npm ci
-npm run dev
-```
-
-Open http://127.0.0.1:5175. Use A and D to move, W to jump, E to hide or take the fish, and Q to take or drop the fish. Take the fish to the barrel at the top left. Quit stops the game. Reload the page to open the menu.
-
-```sh
-npm test
-npm run build
-npm run deploy
-```
-
-The browser uses the existing assets and the actor weights from `marl_model.zip`. `python3 scripts/export-policy.py` exports those weights and reference values. The game runs at 60 steps per second. The jump speed is 22 pixels per step and gravity is 1.2 pixels per step squared. The shopkeeper uses A* paths between reachable platforms and the trained model's speed action. Its chase speed stays between 3.5 and 4.25 pixels per step. The guards patrol at 2 pixels per step and check the trained model's direction action twice per second.
-
-`tests/browser-play.js` runs a full play with browser keys through the Playwright tool. The `?verify` URL exposes a read-only state for checks. The checks use keys and buttons to control the game.
-
 Pygame based game created to utilize AI concepts. Concept based on Pink Panther: Pinkadelic Pursuit.
 
 ### Environment setup

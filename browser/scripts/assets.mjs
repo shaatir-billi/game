@@ -25,5 +25,5 @@ for (const path of files) {
   await mkdir(`public/assets/${path.split("/").slice(0, -1).join("/")}`, {
     recursive: true,
   });
-  await cp(`assets/${path}`, `public/assets/${path}`, { recursive: true });
+  await cp(`../assets/${path}`, `public/assets/${path}`, { recursive: true });
 }

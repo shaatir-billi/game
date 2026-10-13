@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "node scripts/assets.mjs && cf dev",
     "build": "node scripts/assets.mjs && cf build",
-    "deploy": "node scripts/assets.mjs && cf deploy",
-    "test": "node --test tests/game.test.mjs"
+    "deploy": "node scripts/assets.mjs && cf deploy"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "beta",

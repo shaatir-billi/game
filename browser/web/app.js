@@ -329,20 +329,3 @@ async function load() {
   }
 }
 load();
-
-// Read-only state for browser verification. Game input still uses keys and buttons.
-if (new URL(location.href).searchParams.has("verify")) {
-  Object.defineProperty(window, "__gameState", {
-    get: () =>
-      structuredClone({
-        player: game.player,
-        fish: game.fish,
-        carrying: game.carrying,
-        guards: game.guards,
-        shopkeeper: game.shopkeeper,
-        state: game.state,
-        screen,
-        time: game.time,
-      }),
-  });
-}

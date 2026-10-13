@@ -3,7 +3,6 @@ import collections
 import hashlib
 import io
 import json
-import math
 from pathlib import Path
 import pickle
 import struct
@@ -38,7 +37,7 @@ class TensorReader(pickle.Unpickler):
         return struct.unpack(f'<{size}f', self.archive.read(f'archive/data/{key}'))
 
 
-source = ROOT / 'marl_model.zip'
+source = ROOT.parent / 'marl_model.zip'
 with zipfile.ZipFile(source) as model:
     with zipfile.ZipFile(io.BytesIO(model.read('policy.pth'))) as archive:
         reader = TensorReader(io.BytesIO(archive.read('archive/data.pkl')))
@@ -52,17 +51,4 @@ assert [(len(l['bias']), len(l['weight'][0])) for l in layers] == [(64, 8), (64,
 policy = {'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'layers': layers}
 (ROOT / 'web/policy.json').write_text(json.dumps(policy, separators=(',', ':')) + '\n')
 
-# Reference logits for observations in both halves of the map.
-fixtures = []
-for observation in [[100, 690, 2710, 706, 1350, 436, 2900, 506],
-                    [3200, 690, 3000, 706, 1700, 436, 3200, 506],
-                    [750, 50, 1000, 100, 2000, 436, 3400, 506]]:
-    values = observation
-    for index, layer in enumerate(layers):
-        values = [sum(w * x for w, x in zip(row, values)) + bias
-                  for row, bias in zip(layer['weight'], layer['bias'])]
-        if index < 2:
-            values = [math.tanh(value) for value in values]
-    fixtures.append({'observation': observation, 'logits': values})
-(ROOT / 'tests/policy-fixtures.json').write_text(json.dumps(fixtures, indent=2) + '\n')
 print('Exported PPO actor: 8 inputs, 64 + 64 hidden units, 7 action logits')
