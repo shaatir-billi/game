@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Shaatir Billi browser game." />
+    <title>Shaatir Billi</title>
+    <link rel="icon" type="image/png" href="/assets/menu/3.png" />
+    <link rel="stylesheet" href="/web/style.css" />
+  </head>
+  <body>
+    <main id="stage">
+      <canvas
+        id="game"
+        width="1600"
+        height="900"
+        tabindex="0"
+        aria-label="Shaatir Billi game"
+      ></canvas>
+      <section id="menu" class="screen" aria-labelledby="title">
+        <h1 id="title">Shaatir Billi</h1>
+        <p id="subtitle">The Purr-fect Adventure!</p>
+        <p id="load" role="status">Loading…</p>
+        <button id="play" class="image-button" disabled>PLAY</button>
+        <button id="help">HOW TO PLAY</button>
+        <button id="quit" class="image-button">QUIT</button>
+      </section>
+      <section id="instructions" class="screen" aria-label="How to play" hidden>
+        <img
+          class="help-image"
+          src="/assets/map/how_to_ply.jpg"
+          alt="Take the fish from the shopkeeper to your barrel. E: hide or pick up fish. A and D: move. W: jump. Guards take a life. The shopkeeper takes the fish. You are safe when hidden."
+        />
+        <button id="help-back">BACK</button>
+      </section>
+      <section id="result" class="screen" aria-labelledby="result-title" hidden>
+        <h2 id="result-title">Game Finished!</h2>
+        <button id="again">Play Again</button>
+        <button id="result-menu">Main Menu</button>
+      </section>
+    </main>
+    <script type="module" src="/web/app.js"></script>
+  </body>
+</html>

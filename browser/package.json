@@ -1,0 +1,15 @@
+{
+  "name": "shaatir-billi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/assets.mjs && cf dev",
+    "build": "node scripts/assets.mjs && cf build",
+    "deploy": "node scripts/assets.mjs && cf deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "beta",
+    "cf": "1.0.0-beta.14",
+    "vite": "^8.3.0"
+  }
+}

@@ -1,0 +1,181 @@
+@font-face {
+  font-family: Game;
+  src: url("/assets/fonts/main.ttf") format("truetype");
+  font-display: swap;
+}
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+:root {
+  color-scheme: dark;
+  background: #000;
+}
+body {
+  margin: 0;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+#stage {
+  position: relative;
+  container-type: inline-size;
+  width: min(100vw, calc(100svh * 16 / 9));
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  outline: none;
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+}
+h1,
+h2,
+p,
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  margin: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+h1,
+h2 {
+  font-family: Game, monospace;
+  font-size: 4.375cqw;
+  font-weight: 400;
+  color: #ffd700;
+  -webkit-text-stroke: 0.375cqw #000;
+  paint-order: stroke fill;
+}
+h1 {
+  top: 20%;
+}
+#subtitle {
+  top: 28.571%;
+  font:
+    1.875cqw Game,
+    monospace;
+  color: #fff;
+  -webkit-text-stroke: 0.375cqw #000;
+  paint-order: stroke fill;
+}
+#load {
+  top: 40%;
+  font: 1.5cqw system-ui;
+  color: #000;
+}
+button {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: #000;
+  font:
+    3.125cqw Game,
+    monospace;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.image-button {
+  width: 23.125cqw;
+  height: 6.8125cqw;
+  background: url("/assets/menu/play_button_rect.png") center/100% 100%
+    no-repeat;
+}
+button:focus-visible {
+  outline: 0.1875cqw solid #fff;
+  outline-offset: 0.25cqw;
+}
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    color: #fff;
+  }
+  #help:hover {
+    color: green;
+  }
+}
+button:disabled {
+  cursor: wait;
+}
+#play {
+  top: 50%;
+}
+#help {
+  top: 66.667%;
+}
+#quit {
+  top: 83.333%;
+}
+.help-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+#help-back {
+  top: 83.333%;
+}
+#result {
+  background: #000;
+}
+#result h2 {
+  top: 44.444%;
+  font: 2.25cqw system-ui;
+  color: #fff;
+  -webkit-text-stroke: 0;
+}
+#again {
+  top: 51.111%;
+}
+#result-menu {
+  top: 55.556%;
+}
+#result button {
+  font: 2.25cqw system-ui;
+  color: #fff;
+}
+#result.lost h2 {
+  top: 25%;
+  font:
+    4.375cqw Game,
+    monospace;
+  color: red;
+  -webkit-text-stroke: 0.375cqw #000;
+  paint-order: stroke fill;
+}
+#result.lost button {
+  font:
+    3.125cqw Game,
+    monospace;
+  color: #000;
+  width: 23.125cqw;
+  height: 6.8125cqw;
+  background: url("/assets/menu/play_button_rect.png") center/100% 100%
+    no-repeat;
+}
+#result.lost #again {
+  top: 50%;
+}
+#result.lost #result-menu {
+  top: 66.667%;
+}
+@media (hover: hover) and (pointer: fine) {
+  #result.lost button:hover {
+    color: #fff;
+  }
+}
